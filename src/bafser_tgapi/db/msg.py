@@ -6,7 +6,7 @@ from bafser import IdMixin, Log, SqlAlchemyBase, Undefined, UserBase
 from sqlalchemy import BigInteger, String
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
-import bafser_tgapi
+from ..types import Message
 
 
 class MsgBase(SqlAlchemyBase, IdMixin):
@@ -41,7 +41,7 @@ class MsgBase(SqlAlchemyBase, IdMixin):
         return user, changes
 
     @classmethod
-    def new_from_data(cls, creator: UserBase, data: bafser_tgapi.Message):
+    def new_from_data(cls, creator: UserBase, data: Message):
         return cls.new(creator, data.message_id, data.chat.id, data.text, Undefined.default(data.message_thread_id))
 
     def delete(self, actor: UserBase, commit=True):
