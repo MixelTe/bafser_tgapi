@@ -1,0 +1,27 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bafser_tgapi"
+version = "1.0.0"
+authors = [
+	{ name = "Mixel Te" },
+]
+description = "bafser tg api"
+readme = "README.md"
+requires-python = "== 3.12.*"
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+dependencies = [
+	"bafser==2.2.11",
+	"requests",
+]
+
+[project.urls]
+Homepage = "https://github.com/MixelTe/bafser_tgapi"
+Issues = "https://github.com/MixelTe/bafser_tgapi/issues"
