@@ -54,7 +54,7 @@ data.user.py
 ```py
 from bafser_tgapi import TgUserBase
 
-from data._roles import Roles
+from data import Roles
 
 
 class User(TgUserBase):
@@ -66,7 +66,7 @@ data.msg.py
 ```py
 from bafser_tgapi import MsgBase
 
-from data._tables import Tables
+from data import Tables
 
 
 class Msg(MsgBase):
