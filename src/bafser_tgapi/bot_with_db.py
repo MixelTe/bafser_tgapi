@@ -34,3 +34,13 @@ class BotWithDB[TUser: TgUserBase](Bot):
                 bot.user = bot.get_user(db_sess, bot.sender)
                 return fn(bot, args, **kwargs)
         return wrapped
+
+    @classmethod
+    def connect_db(cls: Type[T], fn: Bot.tcallback[T]):
+        def wrapped(bot: T):
+            assert bot.sender
+            with db_session.create_session() as db_sess:
+                bot.db_sess = db_sess
+                bot.user = bot.get_user(db_sess, bot.sender)
+                return fn(bot)
+        return wrapped

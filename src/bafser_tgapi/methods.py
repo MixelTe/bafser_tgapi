@@ -185,3 +185,41 @@ def pinChatMessage(chat_id: Union[str, int], message_id: int, disable_notificati
     if not ok:
         return False, r
     return True, r["result"]
+
+
+type ChatAction = Literal["typing", "upload_photo", "record_video", "upload_video", "record_voice",
+                          "upload_voice", "upload_document", "choose_sticker", "find_location", "record_video_note", "upload_video_note"]
+
+
+# https://core.telegram.org/bots/api#sendchataction
+def sendChatAction(chat_id: Union[str, int], message_thread_id: int | None, action: ChatAction):
+    ok, r = call("sendChatAction", {
+        "chat_id": chat_id,
+        "message_thread_id": message_thread_id,
+        "action": action,
+    })
+    if not ok:
+        return False, r
+    return True, r["result"]
+
+
+type ReactionTypeEmoji = Literal[
+    "❤", "👍", "👎", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢", "🎉", "🤩", "🤮", "💩",
+    "🙏", "👌", "🕊", "🤡", "🥱", "🥴", "😍", "🐳", "❤‍🔥", "🌚", "🌭", "💯", "🤣", "⚡", "🍌", "🏆",
+    "💔", "🤨", "😐", "🍓", "🍾", "💋", "🖕", "😈", "😴", "😭", "🤓", "👻", "👨‍💻", "👀", "🎃", "🙈",
+    "😇", "😨", "🤝", "✍", "🤗", "🫡", "🎅", "🎄", "☃", "💅", "🤪", "🗿", "🆒", "💘", "🙉", "🦄", "😘",
+    "💊", "🙊", "😎", "👾", "🤷‍♂", "🤷", "🤷‍♀", "😡"
+]
+
+
+# https://core.telegram.org/bots/api#setmessagereaction
+def setMessageReaction(chat_id: Union[str, int], message_id: int, reaction: list[ReactionTypeEmoji], is_big: bool | None = None):
+    ok, r = call("setMessageReaction", {
+        "chat_id": chat_id,
+        "message_id": message_id,
+        "reaction": [{"type": "emoji", "emoji": v} for v in reaction],
+        "is_big": is_big,
+    })
+    if not ok:
+        return False, r
+    return True, r["result"]

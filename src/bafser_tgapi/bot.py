@@ -221,28 +221,40 @@ class Bot:
         else:
             self.answerCallbackQuery(self.TextWrongCommand)
 
-    def sendMessage(self, text: str, message_thread_id: int | None = None, use_markdown: bool = False,
+    def get_cur_chat_and_thread_id(self, chat_id: str | int | None = None, message_thread_id: int | None = None):
+        if self.message:
+            if chat_id is None:
+                chat_id = self.message.chat.id
+            if message_thread_id is None and self.message.is_topic_message and Undefined.defined(self.message.message_thread_id):
+                message_thread_id = self.message.message_thread_id
+        elif self.callback_query and Undefined.defined(self.callback_query.message):
+            if chat_id is None:
+                chat_id = self.callback_query.message.chat.id
+            if message_thread_id is None and Undefined.defined(self.callback_query.message.message_thread_id):
+                message_thread_id = self.callback_query.message.message_thread_id
+        return chat_id, message_thread_id
+
+    def sendMessage(self, text: str, *, message_thread_id: int | None = None, use_markdown: bool = False,
                     reply_markup: InlineKeyboardMarkup | None = None, reply_parameters: ReplyParameters | None = None,
                     entities: List[MessageEntity] | None = None, chat_id: str | int | None = None):
+        chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
         if chat_id is None:
-            if self.message:
-                chat_id = self.message.chat.id
-                if message_thread_id is None and self.message.is_topic_message and Undefined.defined(self.message.message_thread_id):
-                    message_thread_id = self.message.message_thread_id
-            elif self.callback_query and Undefined.defined(self.callback_query.message):
-                chat_id = self.callback_query.message.chat.id
-                if message_thread_id is None and Undefined.defined(self.callback_query.message.message_thread_id):
-                    message_thread_id = self.callback_query.message.message_thread_id
-            else:
-                raise Exception("tgapi: cant send message without chat id")
+            raise Exception("tgapi: cant send message without chat id")
         return sendMessage(chat_id, text, message_thread_id, use_markdown, reply_markup, reply_parameters, entities)
 
-    def answerCallbackQuery(self, text: str | None = None, show_alert: bool = False, url: str | None = None, cache_time: int = 0):
+    def sendChatAction(self, action: ChatAction, *, message_thread_id: int | None = None, chat_id: str | int | None = None):
+        chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
+        if chat_id is None:
+            raise Exception("tgapi: cant send message without chat id")
+        return sendChatAction(chat_id, message_thread_id, action)
+
+    def answerCallbackQuery(self, text: str | None = None, *, show_alert: bool = False, url: str | None = None, cache_time: int = 0):
         if self.callback_query is None:
             raise Exception("tgapi: Bot.answerCallbackQuery is avaible only inside on_callback_query")
         return answerCallbackQuery(self.callback_query.id, text, show_alert, url, cache_time)
 
-    def answerInlineQuery(self, results: list[InlineQueryResult], cache_time: int = 300, is_personal: bool = False, next_offset: str | None = None):
+    def answerInlineQuery(self, results: list[InlineQueryResult], *, cache_time: int = 300,
+                          is_personal: bool = False, next_offset: str | None = None):
         if self.inline_query is None:
             raise Exception("tgapi: Bot.answerInlineQuery is avaible only inside on_inline_query")
         return answerInlineQuery(self.inline_query.id, results, cache_time, is_personal, next_offset)
