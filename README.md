@@ -17,13 +17,7 @@ from bot.bot import Bot
 from scripts.init_db import init_db
 
 app, run = create_app(__name__, AppConfig(DEV_MODE="dev" in sys.argv))
-
-tgapi.setup(
-    config_path="config_dev.txt" if __name__ == "__main__" else "config.txt",
-    botCls=Bot,
-    import_folder="bot",
-    app=app,
-)
+tgapi.setup(botCls=Bot, app=app)
 
 run(False, init_db)
 

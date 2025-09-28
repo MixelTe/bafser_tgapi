@@ -4,8 +4,10 @@ import os
 from typing import TYPE_CHECKING, Any, Type
 
 import requests
-from bafser import JsonObj, Undefined, response_msg
+from bafser import JsonObj, Undefined, response_msg, get_app_config
 from flask import Flask, g, request
+
+import bafser_config
 
 from .types import Update
 
@@ -21,10 +23,13 @@ bot: "Bot | None" = None
 webhook_route = "/webhook"
 
 
-def setup(config_path: str = "config.txt", botCls: Type["Bot"] | None = None, import_folder: str | None = None, app: Flask | None = None):
+def setup(botCls: Type["Bot"] | None = None, app: Flask | None = None, dev: bool = False):
+    """`dev = app.DEV_MODE if app else dev`"""
     global bot_token, bot_name, webhook_token, url, bot
+    if app:
+        dev = get_app_config().DEV_MODE
     try:
-        data = read_config(config_path)
+        data = read_config(bafser_config.config_dev_path if dev else bafser_config.config_path)
         bot_token = data["bot_token"]
         bot_name = data["bot_name"]
         webhook_token = data["webhook_token"]
@@ -33,23 +38,22 @@ def setup(config_path: str = "config.txt", botCls: Type["Bot"] | None = None, im
         logging.error(f"Cant read config\n{e}")
         raise e
 
-    if import_folder:
-        if not os.path.exists(import_folder):
-            return
-
+    if bafser_config.bot_folder:
         def import_dir(path: str):
             import_module = path.replace("/", ".").replace("\\", ".")
             for file in os.listdir(path):
                 fpath = os.path.join(path, file)
                 if os.path.isdir(fpath):
-                    import_dir(fpath)
+                    if not file.startswith("__"):
+                        import_dir(fpath)
                     continue
                 if not file.endswith(".py"):
                     continue
                 module = import_module + "." + file[:-3]
                 importlib.import_module(module)
 
-        import_dir(import_folder)
+        if os.path.exists(bafser_config.bot_folder):
+            import_dir(bafser_config.bot_folder)
 
     if botCls:
         bot = botCls()

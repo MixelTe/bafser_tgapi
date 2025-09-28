@@ -4,6 +4,8 @@ from typing import Callable, Iterable, Self, Type, TypeVar, cast
 from bafser import ParametrizedLogger, add_file_logger
 from typing_extensions import Protocol
 
+import bafser_config
+
 from .methods import *
 from .types import *
 from .utils import get_bot_name
@@ -47,7 +49,7 @@ class Bot:
 
     def init(self):
         fmt = "%(asctime)s;%(levelname)s;%(module)s;%(uid)-10s;%(uname)-15s;%(cmd)-15s;%(message)s"
-        self.logger = BotLogger(add_file_logger("logs/bot.csv", "bot", fmt, ["uid", "uname", "cmd"]))
+        self.logger = BotLogger(add_file_logger(bafser_config.log_bot_path, "bot", fmt, ["uid", "uname", "cmd"]))
 
         def get_desc(v: Bot.tcmd_dsc):
             return v if isinstance(v, str) else v[0]
