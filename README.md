@@ -79,3 +79,18 @@ class Bot(tgapi.BotWithDB[User]):
     _userCls = User
 
 ```
+
+
+## call other method
+```py
+import json
+
+import bafser_tgapi as tgapi
+
+ok, r = tgapi.call("getStickerSet", {
+    "name": "AnimatedEmojies",
+})
+with open("r.json", "w") as f:
+    json.dump(r, f)
+
+```

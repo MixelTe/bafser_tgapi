@@ -2,10 +2,12 @@ import importlib
 import logging
 import os
 from typing import TYPE_CHECKING, Any, Type
+from urllib.parse import urlparse, urlunparse
 
 import requests
-from bafser import JsonObj, Undefined, response_msg, get_app_config
+from bafser import JsonObj, Undefined, get_app_config, response_msg
 from flask import Flask, g, request
+from flask import url_for as flask_url_for
 
 import bafser_config
 
@@ -187,3 +189,12 @@ def configure_webhook(set: bool, allowed_updates: list[str] | None = None, *, co
         ok, r = deleteWebhook(True)
 
     print(f"{ok}\n {r}")
+
+
+def url_for(endpoint: str, *, _anchor: str | None = None, _scheme: str | None = None, **values: Any):
+    new_url = flask_url_for(endpoint, _anchor=_anchor, _scheme=_scheme, **values)
+    parsed = list(urlparse(new_url))
+    parsed_host = list(urlparse(url))
+    parsed[0] = parsed_host[0]
+    parsed[1] = parsed_host[1]
+    return urlunparse(parsed)

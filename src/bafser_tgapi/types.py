@@ -67,6 +67,14 @@ class MessageEntity(JsonObj):
         return MessageEntity(type="underline", offset=offset, length=length)
 
     @staticmethod
+    def code(offset: int, length: int):
+        return MessageEntity(type="code", offset=offset, length=length)
+
+    @staticmethod
+    def text_link(offset: int, length: int, url: str):
+        return MessageEntity(type="text_link", offset=offset, length=length, url=url)
+
+    @staticmethod
     def len(text: str):
         return len(MessageEntity.encode_text(text)) // 2
 
@@ -111,6 +119,11 @@ class InaccessibleMessage(JsonObj):
     chat: Chat
     date: datetime
     message_thread_id = Undefined
+
+
+class MessageId(JsonObj):
+    # https://core.telegram.org/bots/api#messageid
+    message_id: int
 
 
 class InlineQuery(JsonObj):

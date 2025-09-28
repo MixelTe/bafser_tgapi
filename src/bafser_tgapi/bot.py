@@ -1,4 +1,5 @@
 import re
+from functools import wraps
 from typing import Callable, Iterable, Self, Type, TypeVar, cast
 
 from bafser import ParametrizedLogger, add_file_logger
@@ -18,6 +19,8 @@ re_param = re.compile("<[a-z]+>", re.IGNORECASE)
 
 class Bot:
     class tcmd_fn[T: "Bot"](Protocol):
+        __name__: str
+
         def __call__(self, bot: T, args: "BotCmdArgs", **kwargs: str) -> str | None:
             ...
     type tcmd_dsc = tcmd_dsc_text | tuple[tcmd_dsc_text, tcmd_dsc_usage | list[tcmd_dsc_usage]]
@@ -80,8 +83,9 @@ class Bot:
         return r
 
     @classmethod
-    def add_command(cls: Type[T], command: str, *, desc: tcmd_dsc | None = None, desc_adm: tcmd_dsc | None = None):
+    def add_command(cls: Type[T], name: str | None = None, *, desc: tcmd_dsc | None = None, desc_adm: tcmd_dsc | None = None):
         def wrapper(fn: Bot.tcmd_fn[T]):
+            command = name if name else fn.__name__
             if "<" in command:
                 parts: list[tuple[str, bool]] = []
                 param = None
@@ -123,6 +127,7 @@ class Bot:
 
     @classmethod
     def cmd_for_admin(cls: Type[T], fn: tcmd_fn[T]):
+        @wraps(fn)
         def wrapped(bot: T, args: BotCmdArgs, **kwargs: str):
             if bot.chat is None or bot.sender is None:
                 return "403(500!)"
@@ -244,11 +249,29 @@ class Bot:
             raise Exception("tgapi: cant send message without chat id")
         return sendMessage(chat_id, text, message_thread_id, use_markdown, reply_markup, reply_parameters, entities)
 
+    def sendPhoto(self, photo: str, *, caption: str | None = None, message_thread_id: int | None = None, use_markdown: bool = False,
+                  reply_markup: InlineKeyboardMarkup | None = None, reply_parameters: ReplyParameters | None = None,
+                  caption_entities: List[MessageEntity] | None = None, chat_id: str | int | None = None,
+                  show_caption_above_media: bool | None = None, has_spoiler: bool | None = None,
+                  disable_notification: bool | None = None, protect_content: bool | None = None):
+        chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
+        if chat_id is None:
+            raise Exception("tgapi: cant send photo without chat id")
+        return sendPhoto(chat_id, message_thread_id, photo, caption, caption_entities, use_markdown,
+                         show_caption_above_media, has_spoiler, disable_notification, protect_content,
+                         reply_parameters, reply_markup)
+
     def sendChatAction(self, action: ChatAction, *, message_thread_id: int | None = None, chat_id: str | int | None = None):
         chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
         if chat_id is None:
-            raise Exception("tgapi: cant send message without chat id")
+            raise Exception("tgapi: cant send chat action without chat id")
         return sendChatAction(chat_id, message_thread_id, action)
+
+    def sendSticker(self, sticker: str, *, message_thread_id: int | None = None, chat_id: str | int | None = None):
+        chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
+        if chat_id is None:
+            raise Exception("tgapi: cant send sticker without chat id")
+        return sendSticker(chat_id, message_thread_id, sticker)
 
     def answerCallbackQuery(self, text: str | None = None, *, show_alert: bool = False, url: str | None = None, cache_time: int = 0):
         if self.callback_query is None:

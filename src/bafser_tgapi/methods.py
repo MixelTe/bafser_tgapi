@@ -223,3 +223,82 @@ def setMessageReaction(chat_id: Union[str, int], message_id: int, reaction: list
     if not ok:
         return False, r
     return True, r["result"]
+
+
+# https://core.telegram.org/bots/api#sendsticker
+def sendSticker(chat_id: Union[str, int], message_thread_id: int | None, sticker: str):
+    ok, r = call("sendSticker", {
+        "chat_id": chat_id,
+        "message_thread_id": message_thread_id,
+        "sticker": sticker,
+    })
+    if not ok:
+        return False, r
+    return True, Message.new(r["result"]).valid()
+
+
+# https://core.telegram.org/bots/api#sendphoto
+def sendPhoto(chat_id: Union[str, int], message_thread_id: int | None, photo: str, caption: str | None = None,
+              caption_entities: List[MessageEntity] | None = None, use_markdown: bool = False, show_caption_above_media: bool | None = None,
+              has_spoiler: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None,
+              reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | None = None):
+    ok, r = call("sendPhoto", {
+        "chat_id": chat_id,
+        "message_thread_id": message_thread_id,
+        "photo": photo,
+        "caption": caption,
+        "parse_mode": "MarkdownV2" if use_markdown else None,
+        "caption_entities": caption_entities,
+        "show_caption_above_media": show_caption_above_media,
+        "has_spoiler": has_spoiler,
+        "disable_notification": disable_notification,
+        "protect_content": protect_content,
+        "reply_parameters": reply_parameters,
+        "reply_markup": reply_markup,
+    })
+    if not ok:
+        return False, r
+    return True, Message.new(r["result"]).valid()
+
+
+# https://core.telegram.org/bots/api#forwardmessage
+def forwardMessage(chat_id: Union[str, int], message_thread_id: int | None, from_chat_id: Union[str, int], message_id: int,
+                   video_start_timestamp: int | None = None, disable_notification: bool | None = None, protect_content: bool | None = None):
+    ok, r = call("forwardMessage", {
+        "chat_id": chat_id,
+        "message_thread_id": message_thread_id,
+        "from_chat_id": from_chat_id,
+        "message_id": message_id,
+        "video_start_timestamp": video_start_timestamp,
+        "disable_notification": disable_notification,
+        "protect_content": protect_content,
+    })
+    if not ok:
+        return False, r
+    return True, Message.new(r["result"]).valid()
+
+
+# https://core.telegram.org/bots/api#copymessage
+def copyMessage(chat_id: Union[str, int], message_thread_id: int | None, from_chat_id: Union[str, int], message_id: int,
+                video_start_timestamp: int | None = None, caption: str | None = None, use_markdown: bool = False,
+                caption_entities: List[MessageEntity] | None = None, show_caption_above_media: bool | None = None,
+                disable_notification: bool | None = None, protect_content: bool | None = None,
+                reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | None = None):
+    ok, r = call("copyMessage", {
+        "chat_id": chat_id,
+        "message_thread_id": message_thread_id,
+        "from_chat_id": from_chat_id,
+        "message_id": message_id,
+        "video_start_timestamp": video_start_timestamp,
+        "caption": caption,
+        "parse_mode": "MarkdownV2" if use_markdown else None,
+        "caption_entities": caption_entities,
+        "show_caption_above_media": show_caption_above_media,
+        "disable_notification": disable_notification,
+        "protect_content": protect_content,
+        "reply_parameters": reply_parameters,
+        "reply_markup": reply_markup,
+    })
+    if not ok:
+        return False, r
+    return True, MessageId.new(r["result"]).valid()

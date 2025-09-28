@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Any, Type, TypeVar
 
 from bafser import Log, db_session
@@ -27,6 +28,7 @@ class BotWithDB[TUser: TgUserBase](Bot):
 
     @classmethod
     def cmd_connect_db(cls: Type[T], fn: Bot.tcmd_fn[T]):
+        @wraps(fn)
         def wrapped(bot: T, args: BotCmdArgs, **kwargs: str):
             assert bot.sender
             with db_session.create_session() as db_sess:
@@ -37,6 +39,7 @@ class BotWithDB[TUser: TgUserBase](Bot):
 
     @classmethod
     def connect_db(cls: Type[T], fn: Bot.tcallback[T]):
+        @wraps(fn)
         def wrapped(bot: T):
             assert bot.sender
             with db_session.create_session() as db_sess:

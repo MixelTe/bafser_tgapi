@@ -66,11 +66,11 @@ class TgUserBase(UserBase):
         return cls.new(db_sess, data.id, data.is_bot, data.first_name, data.last_name, data.username, data.language_code)
 
     @classmethod
-    def get_by_id_tg(cls, db_sess: Session, id_tg: int):
-        return cls.query(db_sess).filter(cls.id_tg == id_tg).first()
+    def get_by_id_tg(cls, db_sess: Session, id_tg: int, *, for_update: bool = False):
+        return cls.query(db_sess, includeDeleted=True, for_update=for_update).filter(cls.id_tg == id_tg).first()
 
     @classmethod
-    def get_by_username(cls, db_sess: Session, username: str):
+    def get_by_username(cls, db_sess: Session, username: str, *, for_update: bool = False):
         if username.startswith("@"):
             username = username[1:]
-        return cls.query(db_sess).filter(func.lower(cls.username) == username.lower()).first()
+        return cls.query(db_sess, includeDeleted=True, for_update=for_update).filter(func.lower(cls.username) == username.lower()).first()
