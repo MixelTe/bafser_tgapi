@@ -191,10 +191,13 @@ def configure_webhook(set: bool, allowed_updates: list[str] | None = None, *, co
     print(f"{ok}\n {r}")
 
 
-def url_for(endpoint: str, *, _anchor: str | None = None, _scheme: str | None = None, **values: Any):
+def url_for(endpoint: str, *, _anchor: str | None = None,
+            _scheme: str | None = None, _double_slash: bool = True, **values: Any):
     new_url = flask_url_for(endpoint, _anchor=_anchor, _scheme=_scheme, **values)
     parsed = list(urlparse(new_url))
     parsed_host = list(urlparse(url))
     parsed[0] = parsed_host[0]
     parsed[1] = parsed_host[1]
+    if _double_slash:
+        parsed[2] = parsed[2].replace("/", "//")
     return urlunparse(parsed)
