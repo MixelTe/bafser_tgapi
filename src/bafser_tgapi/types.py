@@ -93,6 +93,91 @@ class MessageEntity(JsonObj):
         return MessageEntity.decode_text(text[s:e])
 
 
+class PhotoSize(JsonObj):
+    # https://core.telegram.org/bots/api#photosize
+    file_id: str
+    file_unique_id: str
+    width: int
+    height: int
+    file_size: JsonOpt[int]
+
+
+class Audio(JsonObj):
+    # https://core.telegram.org/bots/api#audio
+    file_id: str
+    file_unique_id: str
+    duration: int
+    performer: JsonOpt[str]
+    title: JsonOpt[str]
+    file_name: JsonOpt[str]
+    mime_type: JsonOpt[str]
+    file_size: JsonOpt[int]
+    thumbnail: JsonOpt[PhotoSize]
+
+
+class Document(JsonObj):
+    # https://core.telegram.org/bots/api#document
+    file_id: str
+    file_unique_id: str
+    thumbnail: JsonOpt[PhotoSize]
+    file_name: JsonOpt[str]
+    mime_type: JsonOpt[str]
+    file_size: JsonOpt[int]
+
+
+class Sticker(JsonObj):
+    # https://core.telegram.org/bots/api#sticker
+    file_id: str
+    file_unique_id: str
+    type: str
+    width: int
+    height: int
+    is_animated: bool
+    is_video: bool
+    thumbnail: JsonOpt[PhotoSize]
+    emoji: JsonOpt[str]
+    set_name: JsonOpt[str]
+    # premium_animation: JsonOpt[File]
+    # mask_position: JsonOpt[MaskPosition]
+    custom_emoji_id: JsonOpt[str]
+    needs_repainting: bool = False
+    file_size: JsonOpt[int]
+
+
+class Video(JsonObj):
+    # https://core.telegram.org/bots/api#video
+    file_id: str
+    file_unique_id: str
+    width: int
+    height: int
+    duration: int
+    thumbnail: JsonOpt[PhotoSize]
+    cover: list[PhotoSize] = []
+    start_timestamp: JsonOpt[int]
+    file_name: JsonOpt[str]
+    mime_type: JsonOpt[str]
+    file_size: JsonOpt[int]
+
+
+class VideoNote(JsonObj):
+    # https://core.telegram.org/bots/api#videonote
+    file_id: str
+    file_unique_id: str
+    length: int
+    duration: int
+    thumbnail: JsonOpt[PhotoSize]
+    file_size: JsonOpt[int]
+
+
+class Voice(JsonObj):
+    # https://core.telegram.org/bots/api#voice
+    file_id: str
+    file_unique_id: str
+    duration: int
+    mime_type: JsonOpt[str]
+    file_size: JsonOpt[int]
+
+
 class Message(JsonObj):
     # https://core.telegram.org/bots/api#message
     __datetime_parser__ = datetime.fromtimestamp
@@ -105,6 +190,15 @@ class Message(JsonObj):
     text: str = ""
     date: datetime
     entities: list[MessageEntity] = []
+    audio: JsonOpt[Audio]
+    document: JsonOpt[Document]
+    photo: JsonOpt[list[PhotoSize]]
+    sticker: JsonOpt[Sticker]
+    video: JsonOpt[Video]
+    video_note: JsonOpt[VideoNote]
+    voice: JsonOpt[Voice]
+    caption: JsonOpt[str]
+    caption_entities: list[MessageEntity] = []
 
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):

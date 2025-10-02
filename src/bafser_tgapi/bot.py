@@ -160,7 +160,7 @@ class Bot:
         self.sender = None
         self.chat = None
         self.logger._reset()
-        if self.message and self.message.text != "":
+        if self.message:
             self.sender = Undefined.default(self.message.sender)
             self.chat = self.message.chat
             self._on_message()

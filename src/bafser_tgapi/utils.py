@@ -3,7 +3,7 @@ import logging
 import os
 import threading
 import traceback
-from typing import TYPE_CHECKING, Any, Callable, Iterable, ParamSpec, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Callable, ParamSpec, Type
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -24,6 +24,7 @@ webhook_token = ""
 url = ""
 devmode = False
 
+flask_app: Flask | None = None
 bot_cls: "Type[Bot] | None" = None
 webhook_route = "/webhook"
 thread_local = threading.local()
@@ -31,8 +32,9 @@ thread_local = threading.local()
 
 def setup(botCls: Type["Bot"] | None = None, app: Flask | None = None, dev: bool = False):
     """`dev = app.DEV_MODE if app else dev`"""
-    global bot_token, bot_name, webhook_token, url, bot_cls, devmode
+    global bot_token, bot_name, webhook_token, url, bot_cls, devmode, flask_app
     if app:
+        flask_app = app
         dev = get_app_config().DEV_MODE
     devmode = dev
     try:
@@ -221,7 +223,10 @@ def configure_webhook(set: bool, allowed_updates: list[str] | None = None, *, co
 
 def url_for(endpoint: str, *, _anchor: str | None = None,
             _scheme: str | None = None, _double_slash: bool = True, **values: Any):
-    new_url = flask_url_for(endpoint, _anchor=_anchor, _scheme=_scheme, **values)
+    if not flask_app:
+        raise Exception("tgapi: no application")
+    with flask_app.app_context(), flask_app.test_request_context():
+        new_url = flask_url_for(endpoint, _anchor=_anchor, _scheme=_scheme, **values)
     parsed = list(urlparse(new_url))
     parsed_host = list(urlparse(url))
     parsed[0] = parsed_host[0]
