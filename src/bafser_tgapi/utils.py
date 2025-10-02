@@ -99,7 +99,8 @@ def process_update(update: Update, req_id: str = ""):
     if not bot_cls:
         raise Exception("tgapi: cant process update without Bot specified in setup")
     try:
-        bot_cls()._process_update(update)
+        with bot_cls() as bot:
+            bot._process_update(update)
     except Exception as e:
         print(e)
         logging.error("%s\n%s\n%s", e, update.json(), traceback.format_exc(), extra={"req_id": req_id})

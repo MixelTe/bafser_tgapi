@@ -55,6 +55,12 @@ class Bot:
     def __init__(self):
         self.logger = BotLogger(self._logger)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any):
+        pass
+
     @classmethod
     def init(cls):
         fmt = "%(asctime)s;%(levelname)s;%(module)s;%(uid)-10s;%(uname)-15s;%(cmd)-15s;%(message)s"

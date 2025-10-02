@@ -1,10 +1,9 @@
-from functools import wraps
 from typing import Any, Type, TypeVar
 
 from bafser import Log, db_session
 from sqlalchemy.orm import Session
 
-from .bot import Bot, BotCmdArgs
+from .bot import Bot
 from .db.user import TgUserBase
 from .types import User
 
@@ -13,8 +12,22 @@ T = TypeVar("T", bound="BotWithDB[Any]", covariant=True)
 
 class BotWithDB[TUser: TgUserBase](Bot):
     _userCls: Type[TUser]
-    db_sess: Session | None = None
-    user: TUser | None = None
+    __db_sess: Session | None = None
+    __user: TUser | None = None
+
+    @property
+    def db_sess(self) -> Session:
+        if not self.__db_sess:
+            self._create_session()
+        assert self.__db_sess
+        return self.__db_sess
+
+    @property
+    def user(self) -> TUser:
+        if not self.__user:
+            self._create_session()
+        assert self.__user
+        return self.__user
 
     def get_user(self, db_sess: Session, sender: User) -> TUser:
         user = self._userCls.get_by_id_tg(db_sess, sender.id)
@@ -26,24 +39,11 @@ class BotWithDB[TUser: TgUserBase](Bot):
             Log.updated(user, user, [("username", old_username, user.username)])
         return user
 
-    @classmethod
-    def cmd_connect_db(cls: Type[T], fn: Bot.tcmd_fn[T]):
-        @wraps(fn)
-        def wrapped(bot: T, args: BotCmdArgs, **kwargs: str):
-            assert bot.sender
-            with db_session.create_session() as db_sess:
-                bot.db_sess = db_sess
-                bot.user = bot.get_user(db_sess, bot.sender)
-                return fn(bot, args, **kwargs)
-        return wrapped
+    def _create_session(self):
+        assert self.sender
+        self.__db_sess = db_session.create_session()
+        self.__user = self.get_user(self.__db_sess, self.sender)
 
-    @classmethod
-    def connect_db(cls: Type[T], fn: Bot.tcallback[T]):
-        @wraps(fn)
-        def wrapped(bot: T):
-            assert bot.sender
-            with db_session.create_session() as db_sess:
-                bot.db_sess = db_sess
-                bot.user = bot.get_user(db_sess, bot.sender)
-                return fn(bot)
-        return wrapped
+    def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any):
+        if self.__db_sess:
+            self.__db_sess.close()
