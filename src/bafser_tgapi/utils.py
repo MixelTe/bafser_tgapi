@@ -160,8 +160,8 @@ def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int
         raise Exception("tgapi call error")
 
 
-def call_async(fn: Callable[[], Any], args: Iterable[Any] = ()):
-    threading.Thread(target=fn, args=args).start()
+def call_async(fn: Callable[[], Any], *args: Any, **kwargs: Any):
+    threading.Thread(target=fn, args=args, kwargs=kwargs).start()
 
 
 def __item_to_json__(item: Any) -> Any:
