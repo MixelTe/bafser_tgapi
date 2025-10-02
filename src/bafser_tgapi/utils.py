@@ -166,7 +166,13 @@ P = ParamSpec("P")
 
 
 def call_async(fn: Callable[P, Any], *args: P.args, **kwargs: P.kwargs):
-    threading.Thread(target=fn, args=args, kwargs=kwargs).start()
+    def _call(fn: Callable[P, Any], req_id, *args: P.args, **kwargs: P.kwargs):
+        if req_id:
+            thread_local.req_id = req_id
+        fn(*args, **kwargs)
+
+    req_id = thread_local.req_id if hasattr(thread_local, "req_id") else None
+    threading.Thread(target=_call, args=(fn, req_id, *args), kwargs=kwargs).start()
 
 
 def __item_to_json__(item: Any) -> Any:
