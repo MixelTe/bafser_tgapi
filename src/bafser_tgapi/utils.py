@@ -3,7 +3,7 @@ import logging
 import os
 import threading
 import traceback
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Type
+from typing import TYPE_CHECKING, Any, Callable, Iterable, ParamSpec, Type, TypeVar
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -160,7 +160,10 @@ def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int
         raise Exception("tgapi call error")
 
 
-def call_async(fn: Callable[[], Any], *args: Any, **kwargs: Any):
+P = ParamSpec("P")
+
+
+def call_async(fn: Callable[P, Any], *args: P.args, **kwargs: P.kwargs):
     threading.Thread(target=fn, args=args, kwargs=kwargs).start()
 
 
