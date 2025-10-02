@@ -1,5 +1,6 @@
 import re
 from functools import wraps
+from logging import Logger
 from typing import Callable, Iterable, Self, Type, TypeVar, cast
 
 from bafser import ParametrizedLogger, add_file_logger
@@ -9,7 +10,7 @@ import bafser_config
 
 from .methods import *
 from .types import *
-from .utils import get_bot_name
+from .utils import call_async, get_bot_name
 
 T = TypeVar("T", bound="Bot")
 type tcmd_dsc_text = str
@@ -40,6 +41,7 @@ class Bot:
     TextWrongCommand = "Wrong command"
     TextCmdForAdmin = "Эта команда только для админов"
     logger: "BotLogger"
+    _logger: Logger
 
     @property
     def sender(self):
@@ -50,18 +52,22 @@ class Bot:
         self._sender = value
         self.logger.user = value
 
-    def init(self):
+    def __init__(self):
+        self.logger = BotLogger(self._logger)
+
+    @classmethod
+    def init(cls):
         fmt = "%(asctime)s;%(levelname)s;%(module)s;%(uid)-10s;%(uname)-15s;%(cmd)-15s;%(message)s"
-        self.logger = BotLogger(add_file_logger(bafser_config.log_bot_path, "bot", fmt, ["uid", "uname", "cmd"]))
+        cls._logger = add_file_logger(bafser_config.log_bot_path, "bot", fmt, ["uid", "uname", "cmd"])
 
         def get_desc(v: Bot.tcmd_dsc):
             return v if isinstance(v, str) else v[0]
 
         for_all: list[BotCommand] = []
         for_adm: list[BotCommand] = []
-        for cmd in self._commands.keys():
-            pub = self._commands[cmd][1][0]
-            adm = self._commands[cmd][1][1]
+        for cmd in cls._commands.keys():
+            pub = cls._commands[cmd][1][0]
+            adm = cls._commands[cmd][1][1]
             if not adm:
                 adm = pub
             cmd = re_param.sub("", cmd)
@@ -70,8 +76,8 @@ class Bot:
             if adm:
                 for_adm.append(BotCommand(command=cmd, description=get_desc(adm)))
 
-        setMyCommands(for_all)
-        setMyCommands(for_adm, BotCommandScope.all_chat_administrators())
+        call_async(lambda: setMyCommands(for_all))
+        call_async(lambda: setMyCommands(for_adm, BotCommandScope.all_chat_administrators()))
 
     def get_my_commands(self, for_admin: bool = False):
         i = 1 if for_admin else 0

@@ -1,7 +1,9 @@
 import importlib
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Type
+import threading
+import traceback
+from typing import TYPE_CHECKING, Any, Callable, Type
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -20,16 +22,18 @@ bot_token = ""
 bot_name = ""
 webhook_token = ""
 url = ""
+devmode = False
 
-bot: "Bot | None" = None
+bot_cls: "Type[Bot] | None" = None
 webhook_route = "/webhook"
 
 
 def setup(botCls: Type["Bot"] | None = None, app: Flask | None = None, dev: bool = False):
     """`dev = app.DEV_MODE if app else dev`"""
-    global bot_token, bot_name, webhook_token, url, bot
+    global bot_token, bot_name, webhook_token, url, bot_cls, devmode
     if app:
         dev = get_app_config().DEV_MODE
+    devmode = dev
     try:
         data = read_config(bafser_config.config_dev_path if dev else bafser_config.config_path)
         bot_token = data["bot_token"]
@@ -58,8 +62,8 @@ def setup(botCls: Type["Bot"] | None = None, app: Flask | None = None, dev: bool
             import_dir(bafser_config.bot_folder)
 
     if botCls:
-        bot = botCls()
-        bot.init()
+        bot_cls = botCls
+        bot_cls.init()
 
     if app:
         app.post(webhook_route)(webhook)
@@ -91,10 +95,16 @@ def get_bot_name():
     return bot_name
 
 
-def process_update(update: Update):
-    if not bot:
+def process_update(update: Update, req_id: str = ""):
+    if not bot_cls:
         raise Exception("tgapi: cant process update without Bot specified in setup")
-    bot._process_update(update)
+    try:
+        bot_cls()._process_update(update)
+    except Exception as e:
+        print(e)
+        logging.error("%s\n%s\n%s", e, update.json(), traceback.format_exc(), extra={"req_id": req_id})
+        if devmode:
+            raise e
 
 
 def run_long_polling():
@@ -114,7 +124,7 @@ def run_long_polling():
 
 def webhook():
     token = request.headers.get("X-Telegram-Bot-Api-Secret-Token", "")
-    if (not check_webhook_token(token)):
+    if not check_webhook_token(token):
         return response_msg("wrong token", 403)
 
     values, is_json = g.json
@@ -122,11 +132,12 @@ def webhook():
         return response_msg("body is not json", 415)
 
     logging.info(f"webhook: {values}")
-    process_update(Update.new(values).valid())
+    update = Update.new(values).valid()
+    threading.Thread(target=process_update, args=(update, g.get("req_id", ""))).start()
     return "ok"
 
 
-def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int | None = None):
+def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int | None = None, req_id: str = ""):
     if timeout is not None and timeout <= 0:
         timeout = None
     json = None
@@ -134,17 +145,22 @@ def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int
         json = __item_to_json__(data)
     elif data:
         json = data.json()
+    log_extra = {"req_id": req_id} if req_id else None
     try:
         r = requests.post(f"https://api.telegram.org/bot{bot_token}/{method}", json=json, timeout=timeout)
         if not r.ok:
-            logging.error(f"tgapi: {method} [{r.status_code}]\t{json}; {r.content}")
+            logging.error(f"tgapi: {method} [{r.status_code}]\t{json}; {r.content}", extra=log_extra)
             return False, r.json()
         rj = r.json()
-        logging.info(f"tgapi: {method}\t{json} -> {rj}")
+        logging.info(f"tgapi: {method}\t{json} -> {rj}", extra=log_extra)
         return True, rj
     except Exception as e:
-        logging.error(f"tgapi call error\n{e}")
+        logging.error(f"tgapi call error\n{e}", extra=log_extra)
         raise Exception("tgapi call error")
+
+
+def call_async(fn: Callable[[], Any]):
+    threading.Thread(target=fn).start()
 
 
 def __item_to_json__(item: Any) -> Any:
