@@ -26,6 +26,7 @@ devmode = False
 
 bot_cls: "Type[Bot] | None" = None
 webhook_route = "/webhook"
+thread_local = threading.local()
 
 
 def setup(botCls: Type["Bot"] | None = None, app: Flask | None = None, dev: bool = False):
@@ -98,6 +99,7 @@ def get_bot_name():
 def process_update(update: Update, req_id: str = ""):
     if not bot_cls:
         raise Exception("tgapi: cant process update without Bot specified in setup")
+    thread_local.req_id = req_id
     try:
         with bot_cls() as bot:
             bot._process_update(update)
@@ -138,7 +140,7 @@ def webhook():
     return "ok"
 
 
-def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int | None = None, req_id: str = ""):
+def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int | None = None):
     if timeout is not None and timeout <= 0:
         timeout = None
     json = None
@@ -146,7 +148,7 @@ def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int
         json = __item_to_json__(data)
     elif data:
         json = data.json()
-    log_extra = {"req_id": req_id} if req_id else None
+    log_extra = {"req_id": thread_local.req_id} if hasattr(thread_local, "req_id") else None
     try:
         r = requests.post(f"https://api.telegram.org/bot{bot_token}/{method}", json=json, timeout=timeout)
         if not r.ok:
