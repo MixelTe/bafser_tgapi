@@ -3,7 +3,7 @@ import logging
 import os
 import threading
 import traceback
-from typing import TYPE_CHECKING, Any, Callable, Type
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Type
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -160,8 +160,8 @@ def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int
         raise Exception("tgapi call error")
 
 
-def call_async(fn: Callable[[], Any]):
-    threading.Thread(target=fn).start()
+def call_async(fn: Callable[[], Any], args: Iterable[Any] = ()):
+    threading.Thread(target=fn, args=args).start()
 
 
 def __item_to_json__(item: Any) -> Any:
