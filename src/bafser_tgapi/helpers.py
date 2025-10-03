@@ -1,3 +1,5 @@
+from typing import Sequence
+
 from .methods import *
 from .types import *
 
@@ -6,7 +8,7 @@ type cmd = str
 ME = MessageEntity
 
 
-def reply_markup(*btns: list[tuple[text, cmd] | InlineKeyboardButton]):
+def reply_markup(*btns: Sequence[tuple[text, cmd] | InlineKeyboardButton]):
     return InlineKeyboardMarkup(inline_keyboard=[[
         el if isinstance(el, InlineKeyboardButton) else InlineKeyboardButton.callback(el[0], el[1])
         for el in row

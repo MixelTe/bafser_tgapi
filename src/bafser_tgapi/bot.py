@@ -11,6 +11,7 @@ import bafser_config
 from .methods import *
 from .types import *
 from .utils import call_async, get_bot_name
+from .helpers import MsgBuilder
 
 T = TypeVar("T", bound="Bot")
 type tcmd_dsc_text = str
@@ -260,12 +261,14 @@ class Bot:
                 message_thread_id = self.callback_query.message.message_thread_id
         return chat_id, message_thread_id
 
-    def sendMessage(self, text: str, *, message_thread_id: int | None = None, use_markdown: bool = False,
+    def sendMessage(self, text: "str | MsgBuilder", *, message_thread_id: int | None = None, use_markdown: bool = False,
                     reply_markup: InlineKeyboardMarkup | None = None, reply_parameters: ReplyParameters | None = None,
                     entities: List[MessageEntity] | None = None, chat_id: str | int | None = None):
         chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
         if chat_id is None:
             raise Exception("tgapi: cant send message without chat id")
+        if isinstance(text, MsgBuilder):
+            text, entities = text.build()
         return sendMessage(chat_id, text, message_thread_id, use_markdown, reply_markup, reply_parameters, entities)
 
     def sendPhoto(self, photo: str, *, caption: str | None = None, message_thread_id: int | None = None, use_markdown: bool = False,

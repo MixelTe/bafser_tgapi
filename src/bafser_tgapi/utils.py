@@ -3,7 +3,7 @@ import logging
 import os
 import threading
 import traceback
-from typing import TYPE_CHECKING, Any, Callable, ParamSpec, Type
+from typing import TYPE_CHECKING, Any, Callable, NoReturn, ParamSpec, Type
 from urllib.parse import urlparse, urlunparse
 
 import requests
@@ -235,5 +235,5 @@ class BotAnswerException(Exception):
         super().__init__(text, entities)
 
 
-def raiseBotAnswer(text: str, entities: list[MessageEntity] | None = None):
+def raiseBotAnswer(text: str, entities: list[MessageEntity] | None = None) -> NoReturn:
     raise BotAnswerException(text, entities)
