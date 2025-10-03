@@ -302,3 +302,13 @@ def copyMessage(chat_id: Union[str, int], message_thread_id: int | None, from_ch
     if not ok:
         return False, r
     return True, MessageId.new(r["result"]).valid()
+
+
+# https://core.telegram.org/bots/api#getstickerset
+def getStickerSet(name: str):
+    ok, r = call("getStickerSet", {
+        "name": name,
+    })
+    if not ok:
+        return False, r
+    return True, StickerSet.new(r["result"]).valid()

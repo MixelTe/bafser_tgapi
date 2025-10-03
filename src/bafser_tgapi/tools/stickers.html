@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <title>Stickers</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font: inherit;
+            color: inherit;
+            background: none;
+            border: none;
+        }
+        html, body {
+            min-height: 100dvh;
+        }
+        body {
+            max-width: 800px;
+            margin: auto;
+            padding: 2em 1em;
+            background-color: white;
+            color: black;
+            font-family: "PT Sans", Arial, Helvetica, sans-serif;
+        }
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #222;
+                color: #eee;
+            }
+        }
+        body > * {
+            margin-block: 1em;
+        }
+        #form, #form label {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1em;
+        }
+        #form input {
+            border-bottom: 1px solid currentColor;
+            outline: none;
+        }
+        #form button {
+            border: 1px solid currentColor;
+            border-radius: 0.25em;
+            padding: 0.2em 0.5em;
+            outline: none;
+            cursor: pointer;
+        }
+        #form button:focus-visible,
+        #form button:hover {
+            background-color: color-mix(in srgb, gray, transparent 80%);
+        }
+        #form button:active {
+            background-color: color-mix(in srgb, gray, transparent 60%);
+        }
+        #error {
+            text-align: center;
+            color: tomato;
+        }
+        #loader {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 !important;
+            font-size: 2rem;
+            background-color: #00000044;
+            z-index: 10;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 250ms;
+        }
+        #loader.shown {
+            pointer-events: all;
+            opacity: 1;
+        }
+        #stickers {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(4em, 1fr));
+            gap: 0.5em;
+        }
+        #stickers > div {
+            position: relative;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            border: 1px solid currentColor;
+            border-radius: 0.5em;
+            user-select: none;
+            cursor: pointer;
+        }
+        #stickers > div:focus-visible,
+        #stickers > div:hover {
+            background-color: color-mix(in srgb, gray, transparent 80%);
+        }
+        #stickers > div:active {
+            background-color: color-mix(in srgb, gray, transparent 60%);
+        }
+        #stickers > div::before {
+            content: "copied";
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 1rem;
+            border-radius: 0.5em;
+            opacity: 0;
+            transition: opacity 250ms;
+        }
+        .copied::before {
+            opacity: 1 !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="loader">Loading...</div>
+    <form id="form">
+        <label>
+            <span>Stickers name:</span>
+            <input type="text" name="name" value="AnimatedEmojies">
+        </label>
+        <button type="submit">Load</button>
+    </form>
+    <div id="error"></div>
+    <div id="stickers">
+
+    </div>
+
+    <script>
+        const form = document.getElementById("form");
+        const errorEl = document.getElementById("error");
+        const loader = document.getElementById("loader");
+        const stickersEl = document.getElementById("stickers");
+        form.addEventListener("submit", async e => {
+            e.preventDefault();
+            if (loader.classList.contains("shown")) return;
+            const name = new FormData(form).get("name").trim();
+            errorEl.innerText = "";
+            if (!name) return;
+            loader.classList.add("shown");
+            try {
+                const r = await fetch("/stickers/" + name);
+                const data = await r.json();
+                if (!data.stickers) {
+                    errorEl.innerText = JSON.stringify(data);
+                    stickersEl.innerHTML = "";
+                    return;
+                }
+                showStickers(data.stickers);
+            } catch (error) {
+                stickersEl.innerHTML = "";
+                errorEl.innerText = error
+            }
+            finally {
+                loader.classList.remove("shown");
+            }
+        })
+        function showStickers(stickers) {
+            stickersEl.innerHTML = "";
+            stickers.forEach(sticker => {
+                const el = document.createElement("div");
+                stickersEl.appendChild(el);
+                el.innerText = sticker.emoji;
+                el.addEventListener("click", () => {
+                    copyText(sticker.file_id);
+                    el.classList.add("copied");
+                    setTimeout(() => {
+                        el.classList.remove("copied");
+                    }, 1000);
+                });
+            });
+        }
+        function copyText(text)
+        {
+            const el = document.createElement('textarea');
+            el.value = text;
+            el.setAttribute('readonly', '');
+            el.style.position = 'absolute';
+            el.style.left = '-9999px';
+            el.style.opacity = '0';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        }
+    </script>
+</body>
+</html>

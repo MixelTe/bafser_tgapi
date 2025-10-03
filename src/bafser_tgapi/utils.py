@@ -13,7 +13,7 @@ from flask import url_for as flask_url_for
 
 import bafser_config
 
-from .types import Update
+from .types import MessageEntity, Update
 
 if TYPE_CHECKING:
     from .bot import Bot
@@ -104,7 +104,10 @@ def process_update(update: Update, req_id: str = ""):
     thread_local.req_id = req_id
     try:
         with bot_cls() as bot:
-            bot._process_update(update)
+            try:
+                bot._process_update(update)
+            except BotAnswerException as answer:
+                bot.sendMessage(answer.text, entities=answer.entities)
     except Exception as e:
         print(e)
         logging.error("%s\n%s\n%s", e, update.json(), traceback.format_exc(), extra={"req_id": req_id})
@@ -199,20 +202,9 @@ def set_webhook(allowed_updates: list[str] | None = None):
         raise Exception(f"tgapi: cant set webhook\n{r}")
 
 
-def configure_webhook(set: bool, allowed_updates: list[str] | None = None, *, config_path: str | None = None):
+def configure_webhook(set: bool, allowed_updates: list[str] | None = None):
     global bot_token, bot_name, webhook_token, url
     from .methods import deleteWebhook, setWebhook
-    if config_path:
-        try:
-            config = read_config(config_path)
-            bot_token = config["bot_token"]
-            bot_name = config["bot_name"]
-            webhook_token = config["webhook_token"]
-            url = config["url"].strip("/") + "/"
-        except Exception as e:
-            print(f"Cant read config\n{e}")
-            return
-
     if set:
         ok, r = setWebhook(get_url(webhook_route), webhook_token, allowed_updates)
     else:
@@ -222,7 +214,7 @@ def configure_webhook(set: bool, allowed_updates: list[str] | None = None, *, co
 
 
 def url_for(endpoint: str, *, _anchor: str | None = None,
-            _scheme: str | None = None, _double_slash: bool = True, **values: Any):
+            _scheme: str | None = None, _double_slash: bool = False, **values: Any):
     if not flask_app:
         raise Exception("tgapi: no application")
     with flask_app.app_context(), flask_app.test_request_context():
@@ -234,3 +226,14 @@ def url_for(endpoint: str, *, _anchor: str | None = None,
     if _double_slash:
         parsed[2] = parsed[2].replace("/", "//")
     return urlunparse(parsed)
+
+
+class BotAnswerException(Exception):
+    def __init__(self, text: str, entities: list[MessageEntity] | None):
+        self.text = text
+        self.entities = entities
+        super().__init__(text, entities)
+
+
+def raiseBotAnswer(text: str, entities: list[MessageEntity] | None = None):
+    raise BotAnswerException(text, entities)

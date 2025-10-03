@@ -2,9 +2,10 @@
 
 
 ## usage
-init project: `bafser init_project`
-set webhook: `bafser configure_webhook set`
-delete webhook: `bafser configure_webhook delete`
+* init project: `bafser init_project`
+* set webhook: `bafser configure_webhook set`
+* delete webhook: `bafser configure_webhook delete`
+* get sticker file_id: `bafser stickers`
 
 main.py
 ```py

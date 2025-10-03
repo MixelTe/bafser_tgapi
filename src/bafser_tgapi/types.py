@@ -421,3 +421,12 @@ class BotCommandScope(JsonObj):
 class ReplyParameters(JsonObj):
     # https://core.telegram.org/bots/api#replyparameters
     message_id: int
+
+
+class StickerSet(JsonObj):
+    # https://core.telegram.org/bots/api#stickerset
+    name: str
+    title: str
+    sticker_type: str
+    stickers: list[Sticker]
+    thumbnail: JsonOpt[PhotoSize]

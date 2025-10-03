@@ -22,7 +22,7 @@ class Bot:
     class tcmd_fn[T: "Bot"](Protocol):
         __name__: str
 
-        def __call__(self, bot: T, args: "BotCmdArgs", **kwargs: str) -> str | None:
+        def __call__(self, bot: T, args: "BotCmdArgs", **kwargs: str) -> str | tuple[str, list[MessageEntity]] | None:
             ...
     type tcmd_dsc = tcmd_dsc_text | tuple[tcmd_dsc_text, tcmd_dsc_usage | list[tcmd_dsc_usage]]
     type tcallback[T: "Bot"] = Callable[[T], None]
@@ -202,6 +202,8 @@ class Bot:
             if r:
                 if isinstance(r, str):
                     self.sendMessage(r)
+                elif isinstance(r, tuple):
+                    self.sendMessage(r[0], entities=r[1])
             elif r is False and self.message.chat.type == "private":
                 self.sendMessage(self.TextWrongCommand)
         else:
@@ -236,7 +238,12 @@ class Bot:
         assert self.callback_query
         r = self._on_command(Undefined.default(self.callback_query.data, ""))
         if r:
-            self.answerCallbackQuery(r if isinstance(r, str) else None)
+            text = None
+            if isinstance(r, str):
+                text = r
+            elif isinstance(r, tuple):
+                text = r[0]
+            self.answerCallbackQuery(text)
         else:
             self.answerCallbackQuery(self.TextWrongCommand)
 
