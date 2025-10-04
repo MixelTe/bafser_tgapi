@@ -421,6 +421,13 @@ class BotCommandScope(JsonObj):
 class ReplyParameters(JsonObj):
     # https://core.telegram.org/bots/api#replyparameters
     message_id: int
+    chat_id: JsonOpt[int | str] = Undefined
+    allow_sending_without_reply: JsonOpt[bool] = Undefined
+    quote: JsonOpt[str] = Undefined
+    quote_parse_mode: JsonOpt[str] = Undefined
+    quote_entities: JsonOpt[list[MessageEntity]] = Undefined
+    quote_position: JsonOpt[int] = Undefined
+    checklist_task_id: JsonOpt[int] = Undefined
 
 
 class StickerSet(JsonObj):

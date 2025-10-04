@@ -369,3 +369,6 @@ class BotCmdArgs(Iterable[str]):
     def __iter__(self):
         for arg in self.args:
             yield arg
+
+    def __repr__(self):
+        return f"/{self.command} {repr(self.args)}"
