@@ -21,7 +21,7 @@ class MsgBase(SqlAlchemyBase, IdMixin):
 
     @declared_attr
     def reply_to_id(cls) -> Mapped[Optional[int]]:
-        return mapped_column(ForeignKey(f"{cls.__tablename__}.id"))
+        return mapped_column(ForeignKey(f"{cls.__tablename__}.id"), default=None)
 
     @declared_attr
     def reply_to(cls: T) -> Mapped[Optional[T]]:
@@ -29,6 +29,7 @@ class MsgBase(SqlAlchemyBase, IdMixin):
             cls.__name__,
             remote_side=f"{cls.__name__}.id",
             foreign_keys=f"{cls.__name__}.reply_to_id",
+            init=False,
         )
 
     @classmethod
