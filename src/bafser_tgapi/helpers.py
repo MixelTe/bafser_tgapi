@@ -45,6 +45,7 @@ class MsgBuilder:
     def _append_builder(self, builder: "MsgBuilder"):
         offset = ME.len(self._text)
         for e in builder._entities:
+            e = e.copy()
             e.offset += offset
             self._entities.append(e)
 

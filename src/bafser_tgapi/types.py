@@ -92,6 +92,17 @@ class MessageEntity(JsonObj):
         e = s + self.length * 2
         return MessageEntity.decode_text(text[s:e])
 
+    def copy(self):
+        return MessageEntity(
+            type=self.type,
+            offset=self.offset,
+            length=self.length,
+            url=self.url,
+            user=self.user,
+            language=self.language,
+            custom_emoji_id=self.custom_emoji_id,
+        )
+
 
 class PhotoSize(JsonObj):
     # https://core.telegram.org/bots/api#photosize
@@ -178,6 +189,19 @@ class Voice(JsonObj):
     file_size: JsonOpt[int]
 
 
+class LinkPreviewOptions(JsonObj):
+    # https://core.telegram.org/bots/api#linkpreviewoptions
+    is_disabled: JsonOpt[bool] = Undefined
+    url: JsonOpt[str] = Undefined
+    prefer_small_media: JsonOpt[bool] = Undefined
+    prefer_large_media: JsonOpt[bool] = Undefined
+    show_above_text: JsonOpt[bool] = Undefined
+
+    @staticmethod
+    def disable():
+        return LinkPreviewOptions(is_disabled=True)
+
+
 class Message(JsonObj):
     # https://core.telegram.org/bots/api#message
     __datetime_parser__ = datetime.fromtimestamp
@@ -190,6 +214,7 @@ class Message(JsonObj):
     text: str = ""
     date: datetime
     entities: list[MessageEntity] = []
+    link_preview_options: JsonOpt[LinkPreviewOptions] = Undefined
     audio: JsonOpt[Audio]
     document: JsonOpt[Document]
     photo: JsonOpt[list[PhotoSize]]
@@ -267,6 +292,29 @@ class ChosenInlineResult(JsonObj):
             return "sender", v
 
 
+class ChatMember(JsonObj):
+    # https://core.telegram.org/bots/api#chatmember
+    status: Literal["creator", "administrator", "member", "restricted", "left", "kicked"]
+    user: User
+
+
+class ChatMemberUpdated(JsonObj):
+    # https://core.telegram.org/bots/api#chatmemberupdated
+    chat: Chat
+    sender: User
+    date: int
+    old_chat_member: ChatMember
+    new_chat_member: ChatMember
+    # invite_link: JsonOpt[ChatInviteLink]
+    via_join_request: JsonOpt[bool]
+    via_chat_folder_invite_link: JsonOpt[bool]
+
+    @override
+    def _parse(self, key: str, v: Any, json: dict[str, Any]):
+        if key == "from":
+            return "sender", v
+
+
 class Update(JsonObj):
     # https://core.telegram.org/bots/api#update
     update_id: int
@@ -274,6 +322,7 @@ class Update(JsonObj):
     inline_query: JsonOpt[InlineQuery]
     callback_query: JsonOpt[CallbackQuery]
     chosen_inline_result: JsonOpt[ChosenInlineResult]
+    my_chat_member: JsonOpt[ChatMemberUpdated]
 
 
 class InputTextMessageContent(JsonObj):
@@ -281,7 +330,7 @@ class InputTextMessageContent(JsonObj):
     message_text: str
     parse_mode: JsonOpt[Literal["MarkdownV2", "HTML", "Markdown"]] = Undefined
     entities: JsonOpt[list[MessageEntity]] = Undefined
-    # link_preview_options: LinkPreviewOptions
+    link_preview_options: JsonOpt[LinkPreviewOptions] = Undefined
 
     @staticmethod
     def nw(message_text: str, use_markdown: bool = False):
@@ -373,12 +422,6 @@ class BotCommand(JsonObj):
     description: str  # 1-256 characters.
 
 
-class ChatMember(JsonObj):
-    # https://core.telegram.org/bots/api#chatmember
-    status: Literal["creator", "administrator", "member", "restricted", "left", "kicked"]
-    user: User
-
-
 BotCommandScopeType = Literal["default", "all_private_chats", "all_group_chats",
                               "all_chat_administrators", "chat", "chat_administrators", "chat_member"]
 
@@ -437,3 +480,69 @@ class StickerSet(JsonObj):
     sticker_type: str
     stickers: list[Sticker]
     thumbnail: JsonOpt[PhotoSize]
+
+
+class InputMedia(JsonObj):
+    # https://core.telegram.org/bots/api#inputmedia
+    type: Literal["photo", "video", "animation", "audio", "document"]
+    media: str
+    caption: JsonOpt[str] = Undefined
+    parse_mode: JsonOpt[Literal["MarkdownV2"]] = Undefined
+    caption_entities: JsonOpt[list[MessageEntity]] = Undefined
+    show_caption_above_media: JsonOpt[bool] = Undefined
+    has_spoiler: JsonOpt[bool] = Undefined
+
+    def __init__(self, media: str):
+        self.media = media
+
+    def set_caption(self, caption: JsonOpt[str] = Undefined, parse_mode: JsonOpt[Literal["MarkdownV2"]] = Undefined,
+                    caption_entities: JsonOpt[list[MessageEntity]] = Undefined, show_caption_above_media: JsonOpt[bool] = Undefined,
+                    has_spoiler: JsonOpt[bool] = Undefined):
+        self.caption = caption
+        self.parse_mode = parse_mode
+        self.caption_entities = caption_entities
+        self.show_caption_above_media = show_caption_above_media
+        self.has_spoiler = has_spoiler
+        return self
+
+
+class InputMediaPhoto(InputMedia):
+    # https://core.telegram.org/bots/api#inputmediaphoto
+    type: Literal["photo"] = JsonObj.field(default="photo", init=False)  # pyright: ignore[reportIncompatibleVariableOverride]
+
+
+class InputMediaVideo(InputMedia):
+    # https://core.telegram.org/bots/api#inputmediavideo
+    type: Literal["video"] = JsonObj.field(default="video", init=False)  # pyright: ignore[reportIncompatibleVariableOverride]
+    thumbnail: JsonOpt[str] = Undefined
+    cover: JsonOpt[str] = Undefined
+    start_timestamp: JsonOpt[int] = Undefined
+    width: JsonOpt[int] = Undefined
+    height: JsonOpt[int] = Undefined
+    duration: JsonOpt[int] = Undefined
+    supports_streaming: JsonOpt[bool] = Undefined
+
+
+class InputMediaAnimation(InputMedia):
+    # https://core.telegram.org/bots/api#inputmediaanimation
+    type: Literal["animation"] = JsonObj.field(default="animation", init=False)  # pyright: ignore[reportIncompatibleVariableOverride]
+    thumbnail: JsonOpt[str] = Undefined
+    width: JsonOpt[int] = Undefined
+    height: JsonOpt[int] = Undefined
+    duration: JsonOpt[int] = Undefined
+
+
+class InputMediaAudio(InputMedia):
+    # https://core.telegram.org/bots/api#inputmediaaudio
+    type: Literal["audio"] = JsonObj.field(default="audio", init=False)  # pyright: ignore[reportIncompatibleVariableOverride]
+    thumbnail: JsonOpt[str] = Undefined
+    duration: JsonOpt[int] = Undefined
+    performer: JsonOpt[str] = Undefined
+    title: JsonOpt[str] = Undefined
+
+
+class InputMediaDocument(InputMedia):
+    # https://core.telegram.org/bots/api#inputmediadocument
+    type: Literal["document"] = JsonObj.field(default="document", init=False)  # pyright: ignore[reportIncompatibleVariableOverride]
+    thumbnail: JsonOpt[str] = Undefined
+    disable_content_type_detection: JsonOpt[bool] = Undefined

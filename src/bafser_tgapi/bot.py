@@ -34,6 +34,7 @@ class Bot:
     callback_query: CallbackQuery | None = None
     inline_query: InlineQuery | None = None
     chosen_inline_result: ChosenInlineResult | None = None
+    my_chat_member: ChatMemberUpdated | None = None
 
     _commands: dict[str, _tcommand] = {}
     _callback: dict[Callable[..., Any], tcallback[Self]] = {}
@@ -158,6 +159,7 @@ class Bot:
         self.callback_query = Undefined.default(update.callback_query)
         self.inline_query = Undefined.default(update.inline_query)
         self.chosen_inline_result = Undefined.default(update.chosen_inline_result)
+        self.my_chat_member = Undefined.default(update.my_chat_member)
         self.sender = None
         self.chat = None
         self.logger._reset()
@@ -175,6 +177,10 @@ class Bot:
         if self.chosen_inline_result:
             self.sender = self.chosen_inline_result.sender
             self._call_callback(self.on_chosen_inline_result)
+        if self.my_chat_member:
+            self.sender = self.my_chat_member.sender
+            self.chat = self.my_chat_member.chat
+            self._call_callback(self.on_my_chat_member)
 
     def _call_callback(self, key: Callable[..., Any]):
         fn = self._callback.get(key)
@@ -194,6 +200,11 @@ class Bot:
     @classmethod
     def on_chosen_inline_result(cls: Type[T], fn: tcallback[T]):
         cls._callback[cls.on_chosen_inline_result] = fn
+        return fn
+
+    @classmethod
+    def on_my_chat_member(cls: Type[T], fn: tcallback[T]):
+        cls._callback[cls.on_my_chat_member] = fn
         return fn
 
     def _on_message(self):
@@ -263,13 +274,14 @@ class Bot:
 
     def sendMessage(self, text: "str | MsgBuilder", *, message_thread_id: int | None = None, use_markdown: bool = False,
                     reply_markup: InlineKeyboardMarkup | None = None, reply_parameters: ReplyParameters | None = None,
-                    entities: List[MessageEntity] | None = None, chat_id: str | int | None = None):
+                    entities: List[MessageEntity] | None = None, chat_id: str | int | None = None,
+                    link_preview_options: LinkPreviewOptions | None = None):
         chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
         if chat_id is None:
             raise Exception("tgapi: cant send message without chat id")
         if isinstance(text, MsgBuilder):
             text, entities = text.build()
-        return sendMessage(chat_id, text, message_thread_id, use_markdown, reply_markup, reply_parameters, entities)
+        return sendMessage(chat_id, text, message_thread_id, use_markdown, reply_markup, reply_parameters, entities, link_preview_options)
 
     def sendPhoto(self, photo: str, *, caption: str | None = None, message_thread_id: int | None = None, use_markdown: bool = False,
                   reply_markup: InlineKeyboardMarkup | None = None, reply_parameters: ReplyParameters | None = None,

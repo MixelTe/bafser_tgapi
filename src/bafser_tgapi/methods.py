@@ -33,7 +33,7 @@ def deleteWebhook(drop_pending_updates: bool | None = None):
 # https://core.telegram.org/bots/api#sendmessage
 def sendMessage(chat_id: str | int, text: str, message_thread_id: int | None = None, use_markdown: bool = False,
                 reply_markup: InlineKeyboardMarkup | None = None, reply_parameters: ReplyParameters | None = None,
-                entities: List[MessageEntity] | None = None):
+                entities: List[MessageEntity] | None = None, link_preview_options: LinkPreviewOptions | None = None):
     ok, r = call("sendMessage", {
         "chat_id": chat_id,
         "message_thread_id": message_thread_id,
@@ -42,6 +42,7 @@ def sendMessage(chat_id: str | int, text: str, message_thread_id: int | None = N
         "reply_markup": reply_markup,
         "reply_parameters": reply_parameters,
         "entities": entities,
+        "link_preview_options": link_preview_options,
     })
     if not ok:
         return False, r
@@ -50,7 +51,8 @@ def sendMessage(chat_id: str | int, text: str, message_thread_id: int | None = N
 
 # https://core.telegram.org/bots/api#editmessagetext
 def editMessageText(chat_id: Union[int, str], message_id: int, text: str, use_markdown: bool = False,
-                    reply_markup: InlineKeyboardMarkup | None = None, entities: List[MessageEntity] | None = None):
+                    reply_markup: InlineKeyboardMarkup | None = None, entities: List[MessageEntity] | None = None,
+                    link_preview_options: LinkPreviewOptions | None = None):
     ok, r = call("editMessageText", {
         "chat_id": chat_id,
         "message_id": message_id,
@@ -58,6 +60,7 @@ def editMessageText(chat_id: Union[int, str], message_id: int, text: str, use_ma
         "parse_mode": "MarkdownV2" if use_markdown else None,
         "reply_markup": reply_markup,
         "entities": entities,
+        "link_preview_options": link_preview_options,
     })
     if not ok:
         return False, r
@@ -165,7 +168,7 @@ def setMyCommands(commands: list[BotCommand], scope: BotCommandScope | None = No
 
 
 # https://core.telegram.org/bots/api#getchatmember
-def getChatMember(chat_id: Union[str, int], user_id: int):
+def getChatMember(chat_id: str | int, user_id: int):
     ok, r = call("getChatMember", {
         "chat_id": chat_id,
         "user_id": user_id,
@@ -176,7 +179,7 @@ def getChatMember(chat_id: Union[str, int], user_id: int):
 
 
 # https://core.telegram.org/bots/api#pinchatmessage
-def pinChatMessage(chat_id: Union[str, int], message_id: int, disable_notification: bool = True):
+def pinChatMessage(chat_id: str | int, message_id: int, disable_notification: bool = True):
     ok, r = call("pinChatMessage", {
         "chat_id": chat_id,
         "message_id": message_id,
@@ -192,7 +195,7 @@ type ChatAction = Literal["typing", "upload_photo", "record_video", "upload_vide
 
 
 # https://core.telegram.org/bots/api#sendchataction
-def sendChatAction(chat_id: Union[str, int], message_thread_id: int | None, action: ChatAction):
+def sendChatAction(chat_id: str | int, message_thread_id: int | None, action: ChatAction):
     ok, r = call("sendChatAction", {
         "chat_id": chat_id,
         "message_thread_id": message_thread_id,
@@ -213,7 +216,7 @@ type ReactionTypeEmoji = Literal[
 
 
 # https://core.telegram.org/bots/api#setmessagereaction
-def setMessageReaction(chat_id: Union[str, int], message_id: int, reaction: list[ReactionTypeEmoji], is_big: bool | None = None):
+def setMessageReaction(chat_id: str | int, message_id: int, reaction: list[ReactionTypeEmoji], is_big: bool | None = None):
     ok, r = call("setMessageReaction", {
         "chat_id": chat_id,
         "message_id": message_id,
@@ -226,7 +229,7 @@ def setMessageReaction(chat_id: Union[str, int], message_id: int, reaction: list
 
 
 # https://core.telegram.org/bots/api#sendsticker
-def sendSticker(chat_id: Union[str, int], message_thread_id: int | None, sticker: str):
+def sendSticker(chat_id: str | int, message_thread_id: int | None, sticker: str):
     ok, r = call("sendSticker", {
         "chat_id": chat_id,
         "message_thread_id": message_thread_id,
@@ -238,7 +241,7 @@ def sendSticker(chat_id: Union[str, int], message_thread_id: int | None, sticker
 
 
 # https://core.telegram.org/bots/api#sendphoto
-def sendPhoto(chat_id: Union[str, int], message_thread_id: int | None, photo: str, caption: str | None = None,
+def sendPhoto(chat_id: str | int, message_thread_id: int | None, photo: str, caption: str | None = None,
               caption_entities: List[MessageEntity] | None = None, use_markdown: bool = False, show_caption_above_media: bool | None = None,
               has_spoiler: bool | None = None, disable_notification: bool | None = None, protect_content: bool | None = None,
               reply_parameters: ReplyParameters | None = None, reply_markup: InlineKeyboardMarkup | None = None):
@@ -261,8 +264,25 @@ def sendPhoto(chat_id: Union[str, int], message_thread_id: int | None, photo: st
     return True, Message.new(r["result"]).valid()
 
 
+# https://core.telegram.org/bots/api#sendmediagroup
+def sendMediaGroup(chat_id: str | int, media: list[InputMedia], message_thread_id: int | None = None,
+                   disable_notification: bool | None = None, protect_content: bool | None = None,
+                   reply_parameters: ReplyParameters | None = None):
+    ok, r = call("sendMediaGroup", {
+        "chat_id": chat_id,
+        "message_thread_id": message_thread_id,
+        "media": media,
+        "disable_notification": disable_notification,
+        "protect_content": protect_content,
+        "reply_parameters": reply_parameters,
+    })
+    if not ok:
+        return False, r
+    return True, list(map(lambda x: Message.new(x).valid(), r["result"]))
+
+
 # https://core.telegram.org/bots/api#forwardmessage
-def forwardMessage(chat_id: Union[str, int], message_thread_id: int | None, from_chat_id: Union[str, int], message_id: int,
+def forwardMessage(chat_id: str | int, message_thread_id: int | None, from_chat_id: str | int, message_id: int,
                    video_start_timestamp: int | None = None, disable_notification: bool | None = None, protect_content: bool | None = None):
     ok, r = call("forwardMessage", {
         "chat_id": chat_id,
@@ -279,7 +299,7 @@ def forwardMessage(chat_id: Union[str, int], message_thread_id: int | None, from
 
 
 # https://core.telegram.org/bots/api#copymessage
-def copyMessage(chat_id: Union[str, int], message_thread_id: int | None, from_chat_id: Union[str, int], message_id: int,
+def copyMessage(chat_id: str | int, message_thread_id: int | None, from_chat_id: str | int, message_id: int,
                 video_start_timestamp: int | None = None, caption: str | None = None, use_markdown: bool = False,
                 caption_entities: List[MessageEntity] | None = None, show_caption_above_media: bool | None = None,
                 disable_notification: bool | None = None, protect_content: bool | None = None,
