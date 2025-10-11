@@ -228,7 +228,7 @@ class Message(JsonObj):
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
         if key == "from":
-            return "sender", v
+            return "sender"
 
 
 class InaccessibleMessage(JsonObj):
@@ -256,7 +256,7 @@ class InlineQuery(JsonObj):
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
         if key == "from":
-            return "sender", v
+            return "sender"
 
 
 type MaybeInaccessibleMessage = Message | InaccessibleMessage
@@ -275,7 +275,7 @@ class CallbackQuery(JsonObj):
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
         if key == "from":
-            return "sender", v
+            return "sender"
 
 
 class ChosenInlineResult(JsonObj):
@@ -289,7 +289,7 @@ class ChosenInlineResult(JsonObj):
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
         if key == "from":
-            return "sender", v
+            return "sender"
 
 
 class ChatMember(JsonObj):
@@ -312,7 +312,7 @@ class ChatMemberUpdated(JsonObj):
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
         if key == "from":
-            return "sender", v
+            return "sender"
 
 
 class Update(JsonObj):

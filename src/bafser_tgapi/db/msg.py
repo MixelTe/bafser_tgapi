@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Optional, TypeVar
 
-from bafser import IdMixin, JsonOpt, Log, SqlAlchemyBase, Undefined, UserBase
+from bafser import IdMixin, JsonOpt, Log, SqlAlchemyBase, Undefined, UserBase, get_db_session
 from sqlalchemy import BigInteger, ForeignKey, String
 from sqlalchemy.orm import Mapped, Session, declared_attr, mapped_column, relationship
 
@@ -61,8 +61,18 @@ class MsgBase(SqlAlchemyBase, IdMixin):
         return cls.new(creator, data.message_id, data.chat.id, data.text, Undefined.default(data.message_thread_id), reply_to_id)
 
     @classmethod
+    def new_from_data2(cls, data: Message, reply_to_id: int | None = None):
+        """Calls cls.new_from_data with UserBase.current as actor"""
+        return cls.new_from_data(UserBase.current, data, reply_to_id)
+
+    @classmethod
     def get_by_message_id(cls, db_sess: Session, message_id: int):
         return cls.query(db_sess).filter(cls.message_id == message_id).first()
+
+    @classmethod
+    def get_by_message_id2(cls, message_id: int):
+        """Calls cls.get_by_message_id with db session from global context"""
+        return cls.get_by_message_id(get_db_session(), message_id)
 
     @classmethod
     def all_by_chat_id(cls, db_sess: Session, chat_id: int, message_thread_id: JsonOpt[int | None] = Undefined):
@@ -71,7 +81,16 @@ class MsgBase(SqlAlchemyBase, IdMixin):
             query = query.filter(cls.message_thread_id == message_thread_id)
         return query.all()
 
+    @classmethod
+    def all_by_chat_id2(cls, chat_id: int, message_thread_id: JsonOpt[int | None] = Undefined):
+        """Calls cls.all_by_chat_id with db session from global context"""
+        return cls.all_by_chat_id(get_db_session(), chat_id, message_thread_id)
+
     def delete(self, actor: UserBase, commit=True):
         db_sess = self.db_sess
         db_sess.delete(self)
         Log.deleted(self, actor, commit=commit)
+
+    def delete2(self, commit=True):
+        """Calls self.delete with UserBase.current as actor"""
+        self.delete(UserBase.current, commit)

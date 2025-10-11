@@ -47,3 +47,9 @@ class BotWithDB[TUser: TgUserBase](Bot):
     def __exit__(self, exc_type: Any, exc_value: Any, traceback: Any):
         if self.__db_sess:
             self.__db_sess.close()
+
+    def __init_subclass__(cls, **kwargs: Any):
+        if not hasattr(cls, "_userCls") or not cls._userCls:
+            raise Exception(f"tgapi: User class is not specified: {cls.__name__}._userCls is None")
+        elif not issubclass(cls._userCls, TgUserBase):
+            raise Exception(f"tgapi: User class is not subclass of TgUserBase: {cls.__name__}._userCls")

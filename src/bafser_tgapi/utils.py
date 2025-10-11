@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Any, Callable, NoReturn, ParamSpec, Type
 from urllib.parse import urlparse, urlunparse
 
 import requests
-from bafser import JsonObj, Undefined, get_app_config, response_msg
-from flask import Flask, g, request
+from bafser import JsonObj, Undefined, get_app_config, override_get_current_user, override_get_db_session, response_msg
+from flask import Flask, g, has_request_context, request
 from flask import url_for as flask_url_for
 
 import bafser_config
@@ -72,6 +72,28 @@ def setup(botCls: Type["Bot"] | None = None, app: Flask | None = None, dev: bool
         app.post(webhook_route)(webhook)
 
 
+@override_get_db_session
+def get_db_session(getter):
+    if has_request_context():
+        return getter()
+    bot = thread_local.bot if hasattr(thread_local, "bot") else None
+    from . import BotWithDB
+    if bot and isinstance(bot, BotWithDB):
+        return bot.db_sess
+    raise Exception("tgapi: cant get db session - no request or BotWithDB context")
+
+
+@override_get_current_user
+def get_current_user(getter, lazyload: bool, for_update: bool):
+    if has_request_context():
+        return getter(lazyload, for_update)
+    bot = thread_local.bot if hasattr(thread_local, "bot") else None
+    from . import BotWithDB
+    if bot and isinstance(bot, BotWithDB):
+        return bot.user
+    raise Exception("tgapi: cant get current user - no request or BotWithDB context")
+
+
 def read_config(path: str):
     data: dict[str, str] = {}
     with open(path) as f:
@@ -104,6 +126,7 @@ def process_update(update: Update, req_id: str = ""):
     thread_local.req_id = req_id
     try:
         with bot_cls() as bot:
+            thread_local.bot = bot
             try:
                 bot._process_update(update)
             except BotAnswerException as answer:
@@ -113,6 +136,7 @@ def process_update(update: Update, req_id: str = ""):
         logging.error("%s\n%s\n%s", e, update.json(), traceback.format_exc(), extra={"req_id": req_id})
         if devmode:
             raise e
+    thread_local.bot = None
 
 
 def run_long_polling():

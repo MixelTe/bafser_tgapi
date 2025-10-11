@@ -1,6 +1,6 @@
 from typing import Any, override
 
-from bafser import UserBase, UserKwargs, randstr
+from bafser import UserBase, UserKwargs, get_db_session, randstr
 from sqlalchemy import BigInteger, String, func
 from sqlalchemy.orm import Mapped, Session, mapped_column
 
@@ -28,17 +28,8 @@ class TgUserBase(UserBase):
     @override
     def _new(cls, db_sess: Session, user_kwargs: UserKwargs, *,
              id_tg: int, is_bot: bool, first_name: str, last_name: str, username: str, language_code: str, **kwargs: Any):
-        user = cls(**user_kwargs,
+        return cls(**user_kwargs,
                    id_tg=id_tg, is_bot=is_bot, first_name=first_name, last_name=last_name, username=username, language_code=language_code)
-        changes = [
-            ("id_tg", user.id_tg),
-            ("is_bot", user.is_bot),
-            ("first_name", user.first_name),
-            ("last_name", user.last_name),
-            ("username", user.username),
-            ("language_code", user.language_code),
-        ]
-        return user, changes
 
     @classmethod
     @override
@@ -66,11 +57,26 @@ class TgUserBase(UserBase):
         return cls.new(db_sess, data.id, data.is_bot, data.first_name, data.last_name, data.username, data.language_code)
 
     @classmethod
+    def new_from_data2(cls, data: "User"):
+        """Calls cls.new_from_data with db session from global context"""
+        return cls.new_from_data(get_db_session(), data)
+
+    @classmethod
     def get_by_id_tg(cls, db_sess: Session, id_tg: int, *, for_update: bool = False):
         return cls.query(db_sess, includeDeleted=True, for_update=for_update).filter(cls.id_tg == id_tg).first()
+
+    @classmethod
+    def get_by_id_tg2(cls, id_tg: int, *, for_update: bool = False):
+        """Calls cls.get_by_id_tg with db session from global context"""
+        return cls.get_by_id_tg(get_db_session(), id_tg, for_update=for_update)
 
     @classmethod
     def get_by_username(cls, db_sess: Session, username: str, *, for_update: bool = False):
         if username.startswith("@"):
             username = username[1:]
         return cls.query(db_sess, includeDeleted=True, for_update=for_update).filter(func.lower(cls.username) == username.lower()).first()
+
+    @classmethod
+    def get_by_username2(cls, username: str, *, for_update: bool = False):
+        """Calls cls.get_by_username with db session from global context"""
+        return cls.get_by_username(get_db_session(), username, for_update=for_update)
