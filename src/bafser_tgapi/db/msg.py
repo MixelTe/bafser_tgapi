@@ -35,12 +35,8 @@ class MsgBase(SqlAlchemyBase, IdMixin):
     @classmethod
     def new(cls, creator: UserBase, message_id: int, chat_id: int, text: str | None = None, message_thread_id: int | None = None,
             reply_to_id: int | None = None, *_: Any, **kwargs: Any):
-        db_sess = creator.db_sess
-        msg, add_changes = cls._new(db_sess, message_id, chat_id, text, message_thread_id, reply_to_id, **kwargs)
-
-        db_sess.add(msg)
-        Log.added(msg, creator, add_changes)
-
+        msg = cls._new(creator.db_sess, message_id, chat_id, text, message_thread_id, reply_to_id, **kwargs)
+        Log.added(msg, creator)
         return msg
 
     @classmethod
@@ -48,13 +44,7 @@ class MsgBase(SqlAlchemyBase, IdMixin):
              message_thread_id: int | None, reply_to_id: int | None, **kwargs: Any):
         msg = cls(message_id=message_id, chat_id=chat_id, text=text, message_thread_id=message_thread_id)
         msg.reply_to_id = reply_to_id
-        changes = [
-            ("message_id", msg.message_id),
-            ("chat_id", msg.chat_id),
-            ("text", msg.text),
-            ("message_thread_id", msg.message_thread_id),
-        ]
-        return msg, changes
+        return msg
 
     @classmethod
     def new_from_data(cls, creator: UserBase, data: Message, reply_to_id: int | None = None):
@@ -87,8 +77,7 @@ class MsgBase(SqlAlchemyBase, IdMixin):
         return cls.all_by_chat_id(get_db_session(), chat_id, message_thread_id)
 
     def delete(self, actor: UserBase, commit=True):
-        db_sess = self.db_sess
-        db_sess.delete(self)
+        self.db_sess.delete(self)
         Log.deleted(self, actor, commit=commit)
 
     def delete2(self, commit=True):
