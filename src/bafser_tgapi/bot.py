@@ -207,8 +207,36 @@ class Bot:
         cls._callback[cls.on_my_chat_member] = fn
         return fn
 
+    @classmethod
+    def on_forum_topic_created(cls: Type[T], fn: tcallback[T]):
+        cls._callback[cls.on_forum_topic_created] = fn
+        return fn
+
+    @classmethod
+    def on_forum_topic_edited(cls: Type[T], fn: tcallback[T]):
+        cls._callback[cls.on_forum_topic_edited] = fn
+        return fn
+
+    @classmethod
+    def on_forum_topic_closed(cls: Type[T], fn: tcallback[T]):
+        cls._callback[cls.on_forum_topic_closed] = fn
+        return fn
+
+    @classmethod
+    def on_forum_topic_reopened(cls: Type[T], fn: tcallback[T]):
+        cls._callback[cls.on_forum_topic_reopened] = fn
+        return fn
+
     def _on_message(self):
         assert self.message
+        if Undefined.defined(self.message.forum_topic_created):
+            return self._call_callback(self.on_forum_topic_created)
+        if Undefined.defined(self.message.forum_topic_edited):
+            return self._call_callback(self.on_forum_topic_edited)
+        if Undefined.defined(self.message.forum_topic_closed):
+            return self._call_callback(self.on_forum_topic_closed)
+        if Undefined.defined(self.message.forum_topic_reopened):
+            return self._call_callback(self.on_forum_topic_reopened)
         if self.message.text.startswith("/"):
             r = self._on_command(self.message.text[1:])
             if r:

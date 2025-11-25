@@ -202,6 +202,29 @@ class LinkPreviewOptions(JsonObj):
         return LinkPreviewOptions(is_disabled=True)
 
 
+class ForumTopicCreated(JsonObj):
+    # https://core.telegram.org/bots/api#forumtopiccreated
+    name: str
+    icon_color: int
+    icon_custom_emoji_id: JsonOpt[str]
+
+
+class ForumTopicEdited(JsonObj):
+    # https://core.telegram.org/bots/api#forumtopicedited
+    name: str
+    icon_custom_emoji_id: JsonOpt[str]
+
+
+class ForumTopicClosed(JsonObj):
+    # https://core.telegram.org/bots/api#forumtopicclosed
+    pass
+
+
+class ForumTopicReopened(JsonObj):
+    # https://core.telegram.org/bots/api#forumtopicreopened
+    pass
+
+
 class Message(JsonObj):
     # https://core.telegram.org/bots/api#message
     __datetime_parser__ = datetime.fromtimestamp
@@ -224,6 +247,10 @@ class Message(JsonObj):
     voice: JsonOpt[Voice]
     caption: JsonOpt[str]
     caption_entities: list[MessageEntity] = []
+    forum_topic_created: JsonOpt[ForumTopicCreated]
+    forum_topic_edited: JsonOpt[ForumTopicEdited]
+    forum_topic_closed: JsonOpt[ForumTopicClosed]
+    forum_topic_reopened: JsonOpt[ForumTopicReopened]
 
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
