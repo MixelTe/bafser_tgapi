@@ -192,7 +192,6 @@ def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int
             backoff = 0.5 * (2**attempt)
             logging.warning(f"tgapi retry {attempt + 1}/{retries}: {method} [{resp.status_code}], sleeping {backoff:.2f}s", extra=log_extra)
             time.sleep(backoff)
-            return False, resp.json()
         except Exception as e:
             if attempt >= retries:
                 logging.error(f"tgapi call error\n{e}", extra=log_extra)
