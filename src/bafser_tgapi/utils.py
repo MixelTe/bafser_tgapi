@@ -186,7 +186,7 @@ def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int
                 res = resp.json()
                 logging.info(f"tgapi: {method}\t{json} -> {res}", extra=log_extra)
                 return True, res
-            if attempt >= retries or resp.status_code == 400:
+            if attempt >= retries or resp.status_code in (400, 409):
                 logging.error(f"tgapi: {method} [{resp.status_code}]\t{json}; {resp.content}", extra=log_extra)
                 return False, resp.json()
             backoff = 0.5 * (2**attempt)
