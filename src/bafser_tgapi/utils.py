@@ -2,6 +2,7 @@ import importlib
 import logging
 import os
 import threading
+import time
 import traceback
 from typing import TYPE_CHECKING, Any, Callable, NoReturn, ParamSpec, Type
 from urllib.parse import urlparse, urlunparse
@@ -169,7 +170,7 @@ def webhook():
     return "ok"
 
 
-def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int | None = None):
+def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int | None = None, retries: int = 3) -> tuple[bool, Any]:
     if timeout is not None and timeout <= 0:
         timeout = None
     json = None
@@ -178,17 +179,28 @@ def call(method: str, data: JsonObj | dict[str, Any] | None = None, timeout: int
     elif data:
         json = data.json()
     log_extra = {"req_id": thread_local.req_id} if hasattr(thread_local, "req_id") else None
-    try:
-        r = requests.post(f"https://api.telegram.org/bot{bot_token}/{method}", json=json, timeout=timeout)
-        if not r.ok:
-            logging.error(f"tgapi: {method} [{r.status_code}]\t{json}; {r.content}", extra=log_extra)
-            return False, r.json()
-        rj = r.json()
-        logging.info(f"tgapi: {method}\t{json} -> {rj}", extra=log_extra)
-        return True, rj
-    except Exception as e:
-        logging.error(f"tgapi call error\n{e}", extra=log_extra)
-        raise Exception("tgapi call error")
+    for attempt in range(retries + 1):
+        try:
+            resp = requests.post(f"https://api.telegram.org/bot{bot_token}/{method}", json=json, timeout=timeout)
+            if resp.ok:
+                res = resp.json()
+                logging.info(f"tgapi: {method}\t{json} -> {res}", extra=log_extra)
+                return True, res
+            if attempt >= retries or resp.status_code == 400:
+                logging.error(f"tgapi: {method} [{resp.status_code}]\t{json}; {resp.content}", extra=log_extra)
+                return False, resp.json()
+            backoff = 0.5 * (2**attempt)
+            logging.warning(f"tgapi retry {attempt + 1}/{retries}: {method} [{resp.status_code}], sleeping {backoff:.2f}s", extra=log_extra)
+            time.sleep(backoff)
+            return False, resp.json()
+        except Exception as e:
+            if attempt >= retries:
+                logging.error(f"tgapi call error\n{e}", extra=log_extra)
+                raise Exception("tgapi call error") from e
+            backoff = 0.5 * (2**attempt)
+            logging.warning(f"tgapi retry {attempt + 1}/{retries}: {method} {e}, sleeping {backoff:.2f}s", extra=log_extra)
+            time.sleep(backoff)
+    return False, None
 
 
 P = ParamSpec("P")
