@@ -1,3 +1,5 @@
+# ruff: noqa: F403
+# ruff: noqa: F405
 from typing import List, Union
 
 from .types import *
@@ -216,11 +218,11 @@ type ReactionTypeEmoji = Literal[
 
 
 # https://core.telegram.org/bots/api#setmessagereaction
-def setMessageReaction(chat_id: str | int, message_id: int, reaction: list[ReactionTypeEmoji], is_big: bool | None = None):
+def setMessageReaction(chat_id: str | int, message_id: int, reaction: list[ReactionTypeEmoji] | None, is_big: bool | None = None):
     ok, r = call("setMessageReaction", {
         "chat_id": chat_id,
         "message_id": message_id,
-        "reaction": [{"type": "emoji", "emoji": v} for v in reaction],
+        "reaction": [{"type": "emoji", "emoji": v} for v in reaction] if reaction else None,
         "is_big": is_big,
     })
     if not ok:

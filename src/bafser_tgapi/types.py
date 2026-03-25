@@ -110,7 +110,7 @@ class PhotoSize(JsonObj):
     file_unique_id: str
     width: int
     height: int
-    file_size: JsonOpt[int]
+    file_size: JsonOpt[int] = Undefined
 
 
 class Audio(JsonObj):
@@ -118,22 +118,22 @@ class Audio(JsonObj):
     file_id: str
     file_unique_id: str
     duration: int
-    performer: JsonOpt[str]
-    title: JsonOpt[str]
-    file_name: JsonOpt[str]
-    mime_type: JsonOpt[str]
-    file_size: JsonOpt[int]
-    thumbnail: JsonOpt[PhotoSize]
+    performer: JsonOpt[str] = Undefined
+    title: JsonOpt[str] = Undefined
+    file_name: JsonOpt[str] = Undefined
+    mime_type: JsonOpt[str] = Undefined
+    file_size: JsonOpt[int] = Undefined
+    thumbnail: JsonOpt[PhotoSize] = Undefined
 
 
 class Document(JsonObj):
     # https://core.telegram.org/bots/api#document
     file_id: str
     file_unique_id: str
-    thumbnail: JsonOpt[PhotoSize]
-    file_name: JsonOpt[str]
-    mime_type: JsonOpt[str]
-    file_size: JsonOpt[int]
+    thumbnail: JsonOpt[PhotoSize] = Undefined
+    file_name: JsonOpt[str] = Undefined
+    mime_type: JsonOpt[str] = Undefined
+    file_size: JsonOpt[int] = Undefined
 
 
 class Sticker(JsonObj):
@@ -145,14 +145,14 @@ class Sticker(JsonObj):
     height: int
     is_animated: bool
     is_video: bool
-    thumbnail: JsonOpt[PhotoSize]
-    emoji: JsonOpt[str]
-    set_name: JsonOpt[str]
-    # premium_animation: JsonOpt[File]
-    # mask_position: JsonOpt[MaskPosition]
-    custom_emoji_id: JsonOpt[str]
+    thumbnail: JsonOpt[PhotoSize] = Undefined
+    emoji: JsonOpt[str] = Undefined
+    set_name: JsonOpt[str] = Undefined
+    # premium_animation: JsonOpt[File] = Undefined
+    # mask_position: JsonOpt[MaskPosition] = Undefined
+    custom_emoji_id: JsonOpt[str] = Undefined
     needs_repainting: bool = False
-    file_size: JsonOpt[int]
+    file_size: JsonOpt[int] = Undefined
 
 
 class Video(JsonObj):
@@ -162,12 +162,12 @@ class Video(JsonObj):
     width: int
     height: int
     duration: int
-    thumbnail: JsonOpt[PhotoSize]
+    thumbnail: JsonOpt[PhotoSize] = Undefined
     cover: list[PhotoSize] = []
-    start_timestamp: JsonOpt[int]
-    file_name: JsonOpt[str]
-    mime_type: JsonOpt[str]
-    file_size: JsonOpt[int]
+    start_timestamp: JsonOpt[int] = Undefined
+    file_name: JsonOpt[str] = Undefined
+    mime_type: JsonOpt[str] = Undefined
+    file_size: JsonOpt[int] = Undefined
 
 
 class VideoNote(JsonObj):
@@ -176,8 +176,8 @@ class VideoNote(JsonObj):
     file_unique_id: str
     length: int
     duration: int
-    thumbnail: JsonOpt[PhotoSize]
-    file_size: JsonOpt[int]
+    thumbnail: JsonOpt[PhotoSize] = Undefined
+    file_size: JsonOpt[int] = Undefined
 
 
 class Voice(JsonObj):
@@ -185,8 +185,8 @@ class Voice(JsonObj):
     file_id: str
     file_unique_id: str
     duration: int
-    mime_type: JsonOpt[str]
-    file_size: JsonOpt[int]
+    mime_type: JsonOpt[str] = Undefined
+    file_size: JsonOpt[int] = Undefined
 
 
 class LinkPreviewOptions(JsonObj):
@@ -206,13 +206,13 @@ class ForumTopicCreated(JsonObj):
     # https://core.telegram.org/bots/api#forumtopiccreated
     name: str
     icon_color: int
-    icon_custom_emoji_id: JsonOpt[str]
+    icon_custom_emoji_id: JsonOpt[str] = Undefined
 
 
 class ForumTopicEdited(JsonObj):
     # https://core.telegram.org/bots/api#forumtopicedited
     name: str
-    icon_custom_emoji_id: JsonOpt[str]
+    icon_custom_emoji_id: JsonOpt[str] = Undefined
 
 
 class ForumTopicClosed(JsonObj):
@@ -229,28 +229,28 @@ class Message(JsonObj):
     # https://core.telegram.org/bots/api#message
     __datetime_parser__ = datetime.fromtimestamp
     message_id: int
-    message_thread_id: JsonOpt[int]
-    sender: JsonOpt[User]
+    message_thread_id: JsonOpt[int] = Undefined
+    sender: JsonOpt[User] = Undefined
     chat: Chat
-    reply_to_message: JsonOpt["Message"]
+    reply_to_message: JsonOpt["Message"] = Undefined
     is_topic_message: bool = False
     text: str = ""
     date: datetime
     entities: list[MessageEntity] = []
     link_preview_options: JsonOpt[LinkPreviewOptions] = Undefined
-    audio: JsonOpt[Audio]
-    document: JsonOpt[Document]
-    photo: JsonOpt[list[PhotoSize]]
-    sticker: JsonOpt[Sticker]
-    video: JsonOpt[Video]
-    video_note: JsonOpt[VideoNote]
-    voice: JsonOpt[Voice]
-    caption: JsonOpt[str]
+    audio: JsonOpt[Audio] = Undefined
+    document: JsonOpt[Document] = Undefined
+    photo: JsonOpt[list[PhotoSize]] = Undefined
+    sticker: JsonOpt[Sticker] = Undefined
+    video: JsonOpt[Video] = Undefined
+    video_note: JsonOpt[VideoNote] = Undefined
+    voice: JsonOpt[Voice] = Undefined
+    caption: JsonOpt[str] = Undefined
     caption_entities: list[MessageEntity] = []
-    forum_topic_created: JsonOpt[ForumTopicCreated]
-    forum_topic_edited: JsonOpt[ForumTopicEdited]
-    forum_topic_closed: JsonOpt[ForumTopicClosed]
-    forum_topic_reopened: JsonOpt[ForumTopicReopened]
+    forum_topic_created: JsonOpt[ForumTopicCreated] = Undefined
+    forum_topic_edited: JsonOpt[ForumTopicEdited] = Undefined
+    forum_topic_closed: JsonOpt[ForumTopicClosed] = Undefined
+    forum_topic_reopened: JsonOpt[ForumTopicReopened] = Undefined
 
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
@@ -278,7 +278,7 @@ class InlineQuery(JsonObj):
     sender: User
     query: str
     offset: str
-    chat_type: JsonOpt[Literal["sender", "private", "group", "supergroup", "channel"]]
+    chat_type: JsonOpt[Literal["sender", "private", "group", "supergroup", "channel"]] = Undefined
 
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
@@ -293,11 +293,11 @@ class CallbackQuery(JsonObj):
     # https://core.telegram.org/bots/api#callbackquery
     id: str
     sender: User
-    message: JsonOpt[MaybeInaccessibleMessage]
-    inline_message_id: JsonOpt[str]
+    message: JsonOpt[MaybeInaccessibleMessage] = Undefined
+    inline_message_id: JsonOpt[str] = Undefined
     chat_instance: str
-    data: JsonOpt[str]
-    game_short_name: JsonOpt[str]
+    data: JsonOpt[str] = Undefined
+    game_short_name: JsonOpt[str] = Undefined
 
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
@@ -310,7 +310,7 @@ class ChosenInlineResult(JsonObj):
     result_id: str
     sender: User
     # location: Location
-    inline_message_id: JsonOpt[str]
+    inline_message_id: JsonOpt[str] = Undefined
     query: str
 
     @override
@@ -332,9 +332,9 @@ class ChatMemberUpdated(JsonObj):
     date: int
     old_chat_member: ChatMember
     new_chat_member: ChatMember
-    # invite_link: JsonOpt[ChatInviteLink]
-    via_join_request: JsonOpt[bool]
-    via_chat_folder_invite_link: JsonOpt[bool]
+    # invite_link: JsonOpt[ChatInviteLink] = Undefined
+    via_join_request: JsonOpt[bool] = Undefined
+    via_chat_folder_invite_link: JsonOpt[bool] = Undefined
 
     @override
     def _parse(self, key: str, v: Any, json: dict[str, Any]):
@@ -345,11 +345,11 @@ class ChatMemberUpdated(JsonObj):
 class Update(JsonObj):
     # https://core.telegram.org/bots/api#update
     update_id: int
-    message: JsonOpt[Message]
-    inline_query: JsonOpt[InlineQuery]
-    callback_query: JsonOpt[CallbackQuery]
-    chosen_inline_result: JsonOpt[ChosenInlineResult]
-    my_chat_member: JsonOpt[ChatMemberUpdated]
+    message: JsonOpt[Message] = Undefined
+    inline_query: JsonOpt[InlineQuery] = Undefined
+    callback_query: JsonOpt[CallbackQuery] = Undefined
+    chosen_inline_result: JsonOpt[ChosenInlineResult] = Undefined
+    my_chat_member: JsonOpt[ChatMemberUpdated] = Undefined
 
 
 class InputTextMessageContent(JsonObj):
@@ -506,7 +506,7 @@ class StickerSet(JsonObj):
     title: str
     sticker_type: str
     stickers: list[Sticker]
-    thumbnail: JsonOpt[PhotoSize]
+    thumbnail: JsonOpt[PhotoSize] = Undefined
 
 
 class InputMedia(JsonObj):

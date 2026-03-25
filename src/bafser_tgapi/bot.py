@@ -1,17 +1,19 @@
+# ruff: noqa: F403
+# ruff: noqa: F405
 import re
 from functools import wraps
 from logging import Logger
 from typing import Callable, Iterable, Self, Type, TypeVar, cast
 
-from bafser import ParametrizedLogger, add_file_logger
+from bafser import ParametrizedLogger, add_logger, create_log_handler
 from typing_extensions import Protocol
 
 import bafser_config
 
+from .helpers import MsgBuilder
 from .methods import *
 from .types import *
 from .utils import call_async, get_bot_name
-from .helpers import MsgBuilder
 
 T = TypeVar("T", bound="Bot")
 type tcmd_dsc_text = str
@@ -66,7 +68,14 @@ class Bot:
     @classmethod
     def init(cls):
         fmt = "%(asctime)s;%(levelname)s;%(module)s;%(uid)-10s;%(uname)-15s;%(cmd)-15s;%(message)s"
-        cls._logger = add_file_logger(bafser_config.log_bot_path, "bot", fmt, ["uid", "uname", "cmd"])
+        cls._logger = add_logger(
+            "bot",
+            create_log_handler(
+                bafser_config.log_bot_path,
+                fmt,
+                outer_args=["uid", "uname", "cmd"],
+            ),
+        )
 
         def get_desc(v: Bot.tcmd_dsc):
             return v if isinstance(v, str) else v[0]
