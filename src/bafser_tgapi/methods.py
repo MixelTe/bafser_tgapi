@@ -334,3 +334,16 @@ def getStickerSet(name: str):
     if not ok:
         return False, r
     return True, StickerSet.new(r["result"]).valid()
+
+
+def check_message_exists(chat_id: str | int, message_id: int):
+    """returns (is_check_success, is_message_exists)"""
+    ok, res = setMessageReaction(chat_id, message_id, None)
+    if ok:
+        return True, True
+    if isinstance(res, dict) and "description" in res:
+        if "message to react not found" in res["description"]:
+            return True, False
+        elif "REACTION_EMPTY" in res["description"]:
+            return True, True
+    return False, False
