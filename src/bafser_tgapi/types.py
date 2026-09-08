@@ -211,7 +211,7 @@ class ForumTopicCreated(JsonObj):
 
 class ForumTopicEdited(JsonObj):
     # https://core.telegram.org/bots/api#forumtopicedited
-    name: str
+    name: JsonOpt[str] = Undefined
     icon_custom_emoji_id: JsonOpt[str] = Undefined
 
 
