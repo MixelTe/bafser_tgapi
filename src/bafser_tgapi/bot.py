@@ -25,8 +25,8 @@ class Bot:
     class tcmd_fn[T: "Bot"](Protocol):
         __name__: str
 
-        def __call__(self, bot: T, args: "BotCmdArgs", **kwargs: str) -> str | tuple[str, list[MessageEntity]] | None:
-            ...
+        def __call__(self, bot: T, args: "BotCmdArgs", **kwargs: str) -> str | tuple[str, list[MessageEntity]] | None: ...
+
     type tcmd_dsc = tcmd_dsc_text | tuple[tcmd_dsc_text, tcmd_dsc_usage | list[tcmd_dsc_usage]]
     type tcallback[T: "Bot"] = Callable[[T], None]
     _tcommand = tuple[tcmd_fn[Self], tuple[tcmd_dsc | None, tcmd_dsc | None]]
@@ -142,10 +142,12 @@ class Bot:
                     if not m or len(m.groups()) != len(varnames):
                         return None
                     return dict(zip(varnames, m.groups()))
+
                 fn.comparer = comparer  # type: ignore
 
             cls._commands[command] = (fn, (desc, desc_adm))
             return fn
+
         return wrapper
 
     @classmethod
@@ -160,6 +162,7 @@ class Bot:
             if r.status != "creator" and r.status != "administrator":
                 return cls.TextCmdForAdmin
             return fn(bot, args, **kwargs)
+
         return wrapped
 
     def _process_update(self, update: Update):
@@ -309,10 +312,18 @@ class Bot:
                 message_thread_id = self.callback_query.message.message_thread_id
         return chat_id, message_thread_id
 
-    def sendMessage(self, text: "str | MsgBuilder", *, message_thread_id: int | None = None, use_markdown: bool = False,
-                    reply_markup: InlineKeyboardMarkup | None = None, reply_parameters: ReplyParameters | None = None,
-                    entities: List[MessageEntity] | None = None, chat_id: str | int | None = None,
-                    link_preview_options: LinkPreviewOptions | None = None):
+    def sendMessage(
+        self,
+        text: "str | MsgBuilder",
+        *,
+        message_thread_id: int | None = None,
+        use_markdown: bool = False,
+        reply_markup: InlineKeyboardMarkup | None = None,
+        reply_parameters: ReplyParameters | None = None,
+        entities: List[MessageEntity] | None = None,
+        chat_id: str | int | None = None,
+        link_preview_options: LinkPreviewOptions | None = None,
+    ):
         chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
         if chat_id is None:
             raise Exception("tgapi: cant send message without chat id")
@@ -320,17 +331,39 @@ class Bot:
             text, entities = text.build()
         return sendMessage(chat_id, text, message_thread_id, use_markdown, reply_markup, reply_parameters, entities, link_preview_options)
 
-    def sendPhoto(self, photo: str, *, caption: str | None = None, message_thread_id: int | None = None, use_markdown: bool = False,
-                  reply_markup: InlineKeyboardMarkup | None = None, reply_parameters: ReplyParameters | None = None,
-                  caption_entities: List[MessageEntity] | None = None, chat_id: str | int | None = None,
-                  show_caption_above_media: bool | None = None, has_spoiler: bool | None = None,
-                  disable_notification: bool | None = None, protect_content: bool | None = None):
+    def sendPhoto(
+        self,
+        photo: str,
+        *,
+        caption: str | None = None,
+        message_thread_id: int | None = None,
+        use_markdown: bool = False,
+        reply_markup: InlineKeyboardMarkup | None = None,
+        reply_parameters: ReplyParameters | None = None,
+        caption_entities: List[MessageEntity] | None = None,
+        chat_id: str | int | None = None,
+        show_caption_above_media: bool | None = None,
+        has_spoiler: bool | None = None,
+        disable_notification: bool | None = None,
+        protect_content: bool | None = None,
+    ):
         chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
         if chat_id is None:
             raise Exception("tgapi: cant send photo without chat id")
-        return sendPhoto(chat_id, message_thread_id, photo, caption, caption_entities, use_markdown,
-                         show_caption_above_media, has_spoiler, disable_notification, protect_content,
-                         reply_parameters, reply_markup)
+        return sendPhoto(
+            chat_id,
+            message_thread_id,
+            photo,
+            caption,
+            caption_entities,
+            use_markdown,
+            show_caption_above_media,
+            has_spoiler,
+            disable_notification,
+            protect_content,
+            reply_parameters,
+            reply_markup,
+        )
 
     def sendChatAction(self, action: ChatAction, *, message_thread_id: int | None = None, chat_id: str | int | None = None):
         chat_id, message_thread_id = self.get_cur_chat_and_thread_id(chat_id, message_thread_id)
@@ -349,8 +382,14 @@ class Bot:
             raise Exception("tgapi: Bot.answerCallbackQuery is avaible only inside on_callback_query")
         return answerCallbackQuery(self.callback_query.id, text, show_alert, url, cache_time)
 
-    def answerInlineQuery(self, results: list[InlineQueryResult], *, cache_time: int = 300,
-                          is_personal: bool = False, next_offset: str | None = None):
+    def answerInlineQuery(
+        self,
+        results: list[InlineQueryResult],
+        *,
+        cache_time: int = 300,
+        is_personal: bool = False,
+        next_offset: str | None = None,
+    ):
         if self.inline_query is None:
             raise Exception("tgapi: Bot.answerInlineQuery is avaible only inside on_inline_query")
         return answerInlineQuery(self.inline_query.id, results, cache_time, is_personal, next_offset)
@@ -373,13 +412,14 @@ class BotLogger(ParametrizedLogger):
         return {
             "uid": self.user.id if self.user else -1,
             "uname": self.user.username if self.user else "",
-            "cmd": self.cmd
+            "cmd": self.cmd,
         }
 
 
 class BotCmdArgs(Iterable[str]):
     input: str
     args: list[str]
+    lines: list[str]
     raw_args = ""
     raw_argsI = -1
     command = ""
@@ -408,6 +448,8 @@ class BotCmdArgs(Iterable[str]):
                 i += 1
             self.raw_argsI = MessageEntity.len(input[:i])
             self.raw_args = input[i:]
+
+        self.lines = [ln for ln in map(str.strip, self.raw_args.split("\n")) if ln != ""]
 
     def __getitem__(self, i: int):
         return self.args[i]
