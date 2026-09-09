@@ -14,9 +14,9 @@ T = TypeVar("T", bound="MsgBase")
 class MsgBase(SqlAlchemyBase, IdMixin):
     __abstract__ = True
 
-    message_id: Mapped[int] = mapped_column()
-    message_thread_id: Mapped[Optional[int]] = mapped_column()
-    chat_id: Mapped[int] = mapped_column(BigInteger)
+    message_id: Mapped[int] = mapped_column(index=True)
+    message_thread_id: Mapped[Optional[int]] = mapped_column(index=True)
+    chat_id: Mapped[int] = mapped_column(BigInteger, index=True)
     text: Mapped[Optional[str]] = mapped_column(String(512))
 
     @declared_attr
