@@ -5,7 +5,7 @@ from functools import wraps
 from logging import Logger
 from typing import Callable, Iterable, Self, Type, TypeVar, cast
 
-from bafser import ParametrizedLogger, add_logger, create_log_handler
+from bafser import ParametrizedLogger, add_logger, create_log_handler, strfind
 from typing_extensions import Protocol
 
 import bafser_config
@@ -442,9 +442,9 @@ class BotCmdArgs(Iterable[str]):
 
         self.args = self.args[1:]
 
-        i = input.find(" ")
+        i = strfind(input, " ", "\n")
         if i > 0:
-            while i < len(input) and input[i] == " ":
+            while i < len(input) and (input[i] == " " or input[i] == "\n"):
                 i += 1
             self.raw_argsI = MessageEntity.len(input[:i])
             self.raw_args = input[i:]
