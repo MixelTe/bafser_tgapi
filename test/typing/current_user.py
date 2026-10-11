@@ -39,7 +39,7 @@ def check_models(sender: TelegramUser, message: Message, session: Session) -> No
     assert_type(Msg.all_by_chat_id(message.chat.id), list[Msg])
     assert_type(Msg.all_by_chat_id(message.chat.id, None, db_sess=session), list[Msg])
     Msg.new_from_data(message).delete()
-    Msg.new_from_data(message).delete(False, actor=User.current, db_sess=session)
+    Msg.new_from_data(message).delete(commit=False, actor=User.current, db_sess=session)
 
 
 def on_message(bot: Bot) -> None:
