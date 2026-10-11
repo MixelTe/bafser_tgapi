@@ -1,6 +1,6 @@
 # ruff: noqa: F403
 # ruff: noqa: F405
-from typing import List, Union
+from typing import List, TypeAlias, Union
 
 from .types import *
 from .utils import call
@@ -192,7 +192,7 @@ def pinChatMessage(chat_id: str | int, message_id: int, disable_notification: bo
     return True, r["result"]
 
 
-type ChatAction = Literal["typing", "upload_photo", "record_video", "upload_video", "record_voice",
+ChatAction: TypeAlias = Literal["typing", "upload_photo", "record_video", "upload_video", "record_voice",
                           "upload_voice", "upload_document", "choose_sticker", "find_location", "record_video_note", "upload_video_note"]
 
 
@@ -208,7 +208,7 @@ def sendChatAction(chat_id: str | int, message_thread_id: int | None, action: Ch
     return True, r["result"]
 
 
-type ReactionTypeEmoji = Literal[
+ReactionTypeEmoji: TypeAlias = Literal[
     "❤", "👍", "👎", "🔥", "🥰", "👏", "😁", "🤔", "🤯", "😱", "🤬", "😢", "🎉", "🤩", "🤮", "💩",
     "🙏", "👌", "🕊", "🤡", "🥱", "🥴", "😍", "🐳", "❤‍🔥", "🌚", "🌭", "💯", "🤣", "⚡", "🍌", "🏆",
     "💔", "🤨", "😐", "🍓", "🍾", "💋", "🖕", "😈", "😴", "😭", "🤓", "👻", "👨‍💻", "👀", "🎃", "🙈",

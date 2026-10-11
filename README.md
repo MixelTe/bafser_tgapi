@@ -1,5 +1,12 @@
 # bafser tgapi
 
+Requires Python 3.10+ and bafser 2.12.2+ (2.12.x).
+
+## tests
+```sh
+python -m pip install -e .
+python -m unittest discover -s test -v
+```
 
 ## usage
 * init project: `bafser init_project`
@@ -42,7 +49,7 @@ from data.user import Roles, User
 
 
 def init_db(db_sess: Session, config: AppConfig):
-    u = User.new(db_sess, 12345, False, "Admin", "", "username", "en")
+    u = User.new(12345, False, "Admin", "", "username", "en", db_sess=db_sess)
     u.add_role(u, Roles.admin)
 
     db_sess.commit()

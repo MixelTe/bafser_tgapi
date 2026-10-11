@@ -1,10 +1,10 @@
-from typing import Sequence
+from typing import Sequence, TypeAlias
 
 from .methods import *
 from .types import *
 
-type text = str
-type cmd = str
+text: TypeAlias = str
+cmd: TypeAlias = str
 ME = MessageEntity
 
 

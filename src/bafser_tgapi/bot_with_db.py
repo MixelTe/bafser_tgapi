@@ -1,4 +1,4 @@
-from typing import Any, Type, TypeVar
+from typing import Any, Generic, Type, TypeVar
 
 from bafser import Log, db_session
 from sqlalchemy.orm import Session
@@ -8,9 +8,10 @@ from .db.user import TgUserBase
 from .types import User
 
 T = TypeVar("T", bound="BotWithDB[Any]", covariant=True)
+TUser = TypeVar("TUser", bound=TgUserBase)
 
 
-class BotWithDB[TUser: TgUserBase](Bot):
+class BotWithDB(Bot, Generic[TUser]):
     _userCls: Type[TUser]
     __db_sess: Session | None = None
     __user: TUser | None = None
@@ -30,9 +31,9 @@ class BotWithDB[TUser: TgUserBase](Bot):
         return self.__user
 
     def get_user(self, db_sess: Session, sender: User) -> TUser:
-        user = self._userCls.get_by_id_tg(db_sess, sender.id)
+        user = self._userCls.get_by_id_tg(sender.id, db_sess=db_sess)
         if user is None:
-            user = self._userCls.new_from_data(db_sess, sender)
+            user = self._userCls.new_from_data(sender, db_sess=db_sess)
         if user.username != sender.username:
             old_username = user.username
             user.username = sender.username

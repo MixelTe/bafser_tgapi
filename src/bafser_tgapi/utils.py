@@ -151,7 +151,8 @@ def run_long_polling():
             break
         for update in updates:
             update_id = max(update_id, update.update_id)
-            print(f"Update(update_id={update.update_id}, {", ".join(k for k, v in update.items() if Undefined.default(v) and k != "update_id")})")
+            fields = ", ".join(k for k, v in update.items() if Undefined.default(v) and k != "update_id")
+            print(f"Update(update_id={update.update_id}, {fields})")
             process_update(update)
 
 

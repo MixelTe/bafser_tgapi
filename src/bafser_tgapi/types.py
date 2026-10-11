@@ -1,7 +1,8 @@
 from datetime import datetime
-from typing import Any, Literal, Union, override
+from typing import Any, Literal, TypeAlias, Union
 
 from bafser import JsonObj, JsonOpt, Undefined
+from typing_extensions import override
 
 
 class WebhookInfo(JsonObj):
@@ -286,7 +287,7 @@ class InlineQuery(JsonObj):
             return "sender"
 
 
-type MaybeInaccessibleMessage = Message | InaccessibleMessage
+MaybeInaccessibleMessage: TypeAlias = Message | InaccessibleMessage
 
 
 class CallbackQuery(JsonObj):
@@ -367,7 +368,7 @@ class InputTextMessageContent(JsonObj):
         )
 
 
-type InputMessageContent = InputTextMessageContent
+InputMessageContent: TypeAlias = InputTextMessageContent
 
 
 class CallbackGame(JsonObj):

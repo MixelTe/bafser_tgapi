@@ -3,10 +3,10 @@
 import re
 from functools import wraps
 from logging import Logger
-from typing import Callable, Iterable, Self, Type, TypeVar, cast
+from typing import Callable, Iterable, Type, TypeAlias, TypeVar, cast
 
 from bafser import ParametrizedLogger, add_logger, create_log_handler, strfind
-from typing_extensions import Protocol
+from typing_extensions import Protocol, Self
 
 import bafser_config
 
@@ -16,19 +16,20 @@ from .types import *
 from .utils import call_async, get_bot_name
 
 T = TypeVar("T", bound="Bot")
-type tcmd_dsc_text = str
-type tcmd_dsc_usage = str
+TBot_contra = TypeVar("TBot_contra", bound="Bot", contravariant=True)
+tcmd_dsc_text: TypeAlias = str
+tcmd_dsc_usage: TypeAlias = str
 re_param = re.compile("<[a-z]+>", re.IGNORECASE)
 
 
 class Bot:
-    class tcmd_fn[T: "Bot"](Protocol):
+    class tcmd_fn(Protocol[TBot_contra]):
         __name__: str
 
-        def __call__(self, bot: T, args: "BotCmdArgs", **kwargs: str) -> str | tuple[str, list[MessageEntity]] | None: ...
+        def __call__(self, bot: TBot_contra, args: "BotCmdArgs", **kwargs: str) -> str | tuple[str, list[MessageEntity]] | None: ...
 
-    type tcmd_dsc = tcmd_dsc_text | tuple[tcmd_dsc_text, tcmd_dsc_usage | list[tcmd_dsc_usage]]
-    type tcallback[T: "Bot"] = Callable[[T], None]
+    tcmd_dsc: TypeAlias = tcmd_dsc_text | tuple[tcmd_dsc_text, tcmd_dsc_usage | list[tcmd_dsc_usage]]
+    tcallback: TypeAlias = Callable[[T], None]
     _tcommand = tuple[tcmd_fn[Self], tuple[tcmd_dsc | None, tcmd_dsc | None]]
 
     update: Update
